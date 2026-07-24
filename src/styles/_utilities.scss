@@ -1,0 +1,23 @@
+/* ==========================================================================
+   Utility Classes & Mixins
+   ========================================================================== */
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}

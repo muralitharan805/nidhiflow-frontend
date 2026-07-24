@@ -1,0 +1,50 @@
+/* ==========================================================================
+   Material 3 & System Color Custom Properties (Tokens)
+   ========================================================================== */
+
+:root {
+  /* Surface Tokens */
+  --mat-sys-surface: #f8f9fa;
+  --mat-sys-surface-dim: #dedeed;
+  --mat-sys-surface-bright: #fbf8ff;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #f3f3f3;
+  --mat-sys-surface-container: #eeeeee;
+  --mat-sys-surface-container-high: #e8e8e8;
+  --mat-sys-surface-container-highest: #e2e2e2;
+
+  /* Primary Palette Tokens */
+  --mat-sys-primary: #1e3c72;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #dce2f9;
+  --mat-sys-on-primary-container: #001944;
+
+  /* Secondary Palette Tokens */
+  --mat-sys-secondary: #575e71;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #dbf0ff;
+  --mat-sys-on-secondary-container: #141b2c;
+
+  /* Status Colors */
+  --mat-sys-error: #ba1a1a;
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-success: #2e7d32;
+  --mat-sys-on-success: #ffffff;
+  --mat-sys-warning: #ed6c02;
+  --mat-sys-on-warning: #ffffff;
+
+  /* Text & Content Tokens */
+  --mat-sys-on-surface: #191c20;
+  --mat-sys-on-surface-variant: #44474f;
+  --mat-sys-outline: #74777f;
+  --mat-sys-outline-variant: #c4c6cf;
+
+  /* Border Radii & Elevation */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
