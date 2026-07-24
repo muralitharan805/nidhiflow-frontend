@@ -21,6 +21,24 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
       },
+      {
+        path: 'ledger',
+        title: 'Ledger & Chart of Accounts',
+        loadChildren: () =>
+          import('./features/ledger/ledger.routes').then((m) => m.LEDGER_ROUTES),
+      },
+      {
+        path: 'loans',
+        title: 'EMI Loan Amortization',
+        loadChildren: () =>
+          import('./features/amortization/amortization.routes').then((m) => m.AMORTIZATION_ROUTES),
+      },
+      {
+        path: 'forecasting',
+        title: 'Financial Forecasting',
+        loadChildren: () =>
+          import('./features/forecasting/forecasting.routes').then((m) => m.FORECASTING_ROUTES),
+      },
     ],
   },
   {
@@ -32,9 +50,7 @@ export const routes: Routes = [
         path: 'login',
         title: 'Login',
         loadComponent: () =>
-          import('./features/dashboard/feature-shell/dashboard-page.component').then(
-            (m) => m.DashboardPageComponent
-          ),
+          import('./features/auth/login-page.component').then((m) => m.LoginPageComponent),
       },
       {
         path: '',

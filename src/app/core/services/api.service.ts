@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -72,7 +72,9 @@ export class ApiService {
    * @returns Observable emitting the response payload
    */
   public get<T>(endpoint: string, options?: ApiRequestOptions): Observable<T> {
-    return this.http.get<T>(this.formatUrl(endpoint), options);
+    return this.http.get<{ data: T }>(this.formatUrl(endpoint), options).pipe(
+      map((res) => res.data || (res as unknown as T))
+    );
   }
 
   /**
@@ -86,7 +88,9 @@ export class ApiService {
    * @returns Observable emitting the response payload
    */
   public post<T, U = unknown>(endpoint: string, body: U, options?: ApiRequestOptions): Observable<T> {
-    return this.http.post<T>(this.formatUrl(endpoint), body, options);
+    return this.http.post<{ data: T }>(this.formatUrl(endpoint), body, options).pipe(
+      map((res) => res.data || (res as unknown as T))
+    );
   }
 
   /**
@@ -100,7 +104,9 @@ export class ApiService {
    * @returns Observable emitting the response payload
    */
   public put<T, U = unknown>(endpoint: string, body: U, options?: ApiRequestOptions): Observable<T> {
-    return this.http.put<T>(this.formatUrl(endpoint), body, options);
+    return this.http.put<{ data: T }>(this.formatUrl(endpoint), body, options).pipe(
+      map((res) => res.data || (res as unknown as T))
+    );
   }
 
   /**
@@ -114,7 +120,9 @@ export class ApiService {
    * @returns Observable emitting the response payload
    */
   public patch<T, U = unknown>(endpoint: string, body: U, options?: ApiRequestOptions): Observable<T> {
-    return this.http.patch<T>(this.formatUrl(endpoint), body, options);
+    return this.http.patch<{ data: T }>(this.formatUrl(endpoint), body, options).pipe(
+      map((res) => res.data || (res as unknown as T))
+    );
   }
 
   /**
@@ -126,7 +134,9 @@ export class ApiService {
    * @returns Observable emitting the response payload
    */
   public delete<T>(endpoint: string, options?: ApiRequestOptions): Observable<T> {
-    return this.http.delete<T>(this.formatUrl(endpoint), options);
+    return this.http.delete<{ data: T }>(this.formatUrl(endpoint), options).pipe(
+      map((res) => res.data || (res as unknown as T))
+    );
   }
 
   /**
@@ -152,6 +162,8 @@ export class ApiService {
       }
     }
 
-    return this.http.post<T>(this.formatUrl(endpoint), formData);
+    return this.http.post<{ data: T }>(this.formatUrl(endpoint), formData).pipe(
+      map((res) => res.data || (res as unknown as T))
+    );
   }
 }

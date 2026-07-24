@@ -65,24 +65,24 @@ import { NotificationService } from '../../../core/services/notification.service
       gap: 0.75rem;
       padding: 1rem;
       border-radius: 8px;
-      background-color: var(--mat-sys-surface-container-high, #ffffff);
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      background-color: var(--mat-sys-surface-container-high);
+      color: var(--mat-sys-on-surface);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      border-left: 4px solid var(--mat-sys-primary, #6750a4);
+      border-left: 4px solid var(--mat-sys-primary);
       transition: all 0.2s ease-in-out;
     }
 
     .toast-success {
-      border-left-color: var(--mat-sys-success, #2e7d32);
+      border-left-color: var(--mat-sys-success);
     }
     .toast-error {
-      border-left-color: var(--mat-sys-error, #b3261e);
+      border-left-color: var(--mat-sys-error);
     }
     .toast-warning {
-      border-left-color: var(--mat-sys-warning, #ed6c02);
+      border-left-color: var(--mat-sys-warning);
     }
     .toast-info {
-      border-left-color: var(--mat-sys-primary, #0288d1);
+      border-left-color: var(--mat-sys-primary);
     }
 
     .toast-icon {

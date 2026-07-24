@@ -57,12 +57,20 @@ import { AuthService } from '../../../core/services/auth.service';
               <span class="nav-label">Ledger</span>
             </a>
             <a
-              routerLink="/analytics"
+              routerLink="/loans"
+              routerLinkActive="active"
+              class="nav-item"
+            >
+              <span class="nav-icon">🏠</span>
+              <span class="nav-label">EMI Loans</span>
+            </a>
+            <a
+              routerLink="/forecasting"
               routerLinkActive="active"
               class="nav-item"
             >
               <span class="nav-icon">📈</span>
-              <span class="nav-label">Analytics</span>
+              <span class="nav-label">Forecasting</span>
             </a>
           </nav>
         </aside>
@@ -81,8 +89,8 @@ import { AuthService } from '../../../core/services/auth.service';
       height: 100vh;
       width: 100vw;
       overflow: hidden;
-      background-color: var(--mat-sys-surface, #f8f9fa);
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      background-color: var(--mat-sys-surface);
+      color: var(--mat-sys-on-surface);
     }
 
     .app-header {
@@ -91,8 +99,8 @@ import { AuthService } from '../../../core/services/auth.service';
       align-items: center;
       justify-content: space-between;
       padding: 0 1.5rem;
-      background-color: var(--mat-sys-surface-container-high, #ffffff);
-      border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+      background-color: var(--mat-sys-surface-container-high);
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
       z-index: 100;
     }
@@ -140,8 +148,8 @@ import { AuthService } from '../../../core/services/auth.service';
       font-weight: 600;
       padding: 0.25rem 0.75rem;
       border-radius: 16px;
-      background-color: var(--mat-sys-primary-container, #e8def8);
-      color: var(--mat-sys-on-primary-container, #1d192b);
+      background-color: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
     }
 
     .btn-logout, .btn-login {
@@ -154,9 +162,9 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .btn-logout {
-      border: 1px solid var(--mat-sys-outline, #79747e);
+      border: 1px solid var(--mat-sys-outline);
       background: transparent;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--mat-sys-on-surface);
 
       &:hover {
         background-color: rgba(0, 0, 0, 0.05);
@@ -164,7 +172,7 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .btn-login {
-      background-color: var(--mat-sys-primary, #6750a4);
+      background-color: var(--mat-sys-primary);
       color: #ffffff;
       border: none;
     }
@@ -177,8 +185,8 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .app-sidebar {
       width: 240px;
-      background-color: var(--mat-sys-surface-container-low, #f3f3f3);
-      border-right: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+      background-color: var(--mat-sys-surface-container-low);
+      border-right: 1px solid var(--mat-sys-outline-variant);
       transition: width 0.2s ease-in-out;
 
       &.sidebar-collapsed {
@@ -203,7 +211,7 @@ import { AuthService } from '../../../core/services/auth.service';
       gap: 0.75rem;
       padding: 0.75rem 1rem;
       border-radius: 8px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--mat-sys-on-surface-variant);
       text-decoration: none;
       font-weight: 500;
       transition: background 0.15s ease-in-out;
@@ -213,8 +221,8 @@ import { AuthService } from '../../../core/services/auth.service';
       }
 
       &.active {
-        background-color: var(--mat-sys-secondary-container, #e8def8);
-        color: var(--mat-sys-on-secondary-container, #1d192b);
+        background-color: var(--mat-sys-secondary-container);
+        color: var(--mat-sys-on-secondary-container);
         font-weight: 600;
       }
     }

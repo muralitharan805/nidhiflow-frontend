@@ -32,8 +32,8 @@ import { LoadingService } from '../../../core/services/loading.service';
     .spinner {
       width: 48px;
       height: 48px;
-      border: 4px solid var(--mat-sys-surface-container-high, #ffffff);
-      border-top-color: var(--mat-sys-primary, #6750a4);
+      border: 4px solid var(--mat-sys-surface-container-high);
+      border-top-color: var(--mat-sys-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }

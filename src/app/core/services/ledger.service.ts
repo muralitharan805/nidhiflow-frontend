@@ -23,6 +23,17 @@ export interface AccountEntity {
 }
 
 /**
+ * DTO for creating a new account head.
+ */
+export interface CreateAccountDto {
+  code: string;
+  name: string;
+  type: AccountType;
+  description?: string;
+  parentId?: string;
+}
+
+/**
  * Net Worth summary payload from NestJS backend.
  */
 export interface NetWorthSummary {
@@ -86,8 +97,8 @@ export class LedgerService {
    * @param query Optional filtering and pagination params
    * @returns Observable emitting accounts array and total count
    */
-  public getAccounts(query?: { type?: AccountType; search?: string; skip?: number; take?: number }): Observable<{ items: AccountEntity[]; total: number }> {
-    const params = query ? this.apiService.buildHttpParams(query) : undefined;
+  public getAccounts(query?: { type?: AccountType; search?: string; page?: number; limit?: number }): Observable<{ items: AccountEntity[]; total: number }> {
+    const params = this.apiService.buildHttpParams(query || {});
     return this.apiService.get<{ items: AccountEntity[]; total: number }>('/ledger/accounts', { params });
   }
 
@@ -99,5 +110,15 @@ export class LedgerService {
    */
   public postJournalEntry(dto: CreateJournalEntryDto): Observable<JournalEntryEntity> {
     return this.apiService.post<JournalEntryEntity>('/ledger/entries', dto);
+  }
+
+  /**
+   * Create a new Account Head in the Chart of Accounts.
+   *
+   * @param dto Account creation payload
+   * @returns Observable emitting created AccountEntity
+   */
+  public createAccount(dto: CreateAccountDto): Observable<AccountEntity> {
+    return this.apiService.post<AccountEntity>('/ledger/accounts', dto);
   }
 }

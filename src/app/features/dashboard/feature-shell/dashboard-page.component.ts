@@ -1,14 +1,18 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { DashboardStoreService } from '../data-access/dashboard-store.service';
+import { LedgerStoreService } from '../../ledger/data-access/ledger-store.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { QuickExpenseFormComponent } from '../ui/quick-expense-form.component';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
 
 /**
  * Dashboard container component presenting financial summary metrics, asset-to-debt ratios, and transaction feeds.
  */
 @Component({
   selector: 'app-dashboard-page',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, QuickExpenseFormComponent, MatTableModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dashboard-page-container">
@@ -18,8 +22,8 @@ import { NotificationService } from '../../../core/services/notification.service
           <p class="page-subtitle">Real-time Double-Entry Ledger Overview & Cash Flow Metrics</p>
         </div>
         <button
-          type="button"
-          class="btn-refresh"
+          mat-flat-button
+          color="primary"
           (click)="onRefreshData()"
         >
           🔄 Sync Ledger
@@ -61,6 +65,17 @@ import { NotificationService } from '../../../core/services/notification.service
         </div>
       </section>
 
+      <!-- Quick Actions Grid -->
+      <section class="quick-actions-section">
+        <div class="section-header">
+          <h3>⚡ Quick Expense</h3>
+        </div>
+        <app-quick-expense-form
+          [accounts]="ledgerStore.accounts()"
+          (expenseSubmitted)="onExpenseSubmit($event)"
+        />
+      </section>
+
       <!-- Recent Transactions Section -->
       <section class="activity-section">
         <div class="section-header">
@@ -68,39 +83,47 @@ import { NotificationService } from '../../../core/services/notification.service
           <span class="badge-count">{{ store.recentActivity().length }} entries</span>
         </div>
 
-        <div class="table-wrapper">
-          <table class="activity-table" aria-label="Recent Journal Transactions">
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Description</th>
-                <th scope="col">Category</th>
-                <th scope="col" class="text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of store.recentActivity(); track item.id) {
-                <tr>
-                  <td class="cell-date">{{ item.date | date:'mediumDate' }}</td>
-                  <td class="cell-desc">{{ item.description }}</td>
-                  <td>
-                    <span class="category-chip">{{ item.category }}</span>
-                  </td>
-                  <td
-                    class="cell-amount text-right"
-                    [class.credit]="item.type === 'CREDIT'"
-                    [class.debit]="item.type === 'DEBIT'"
-                  >
-                    {{ item.type === 'CREDIT' ? '+' : '-' }} {{ item.amount | currency:'INR':'symbol':'1.0-0' }}
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="4" class="empty-cell">No recent postings recorded in ledger.</td>
-                </tr>
-              }
-            </tbody>
+        <div class="table-wrapper mat-elevation-z1">
+          <table mat-table [dataSource]="store.recentActivity()" aria-label="Recent Journal Transactions">
+            
+            <!-- Date Column -->
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef> Date </th>
+              <td mat-cell *matCellDef="let item" class="cell-date"> {{ item.date | date:'mediumDate' }} </td>
+            </ng-container>
+
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef> Description </th>
+              <td mat-cell *matCellDef="let item" class="cell-desc"> {{ item.description }} </td>
+            </ng-container>
+
+            <!-- Category Column -->
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef> Category </th>
+              <td mat-cell *matCellDef="let item"> 
+                <span class="category-chip">{{ item.category }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Amount Column -->
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef class="text-right"> Amount </th>
+              <td mat-cell *matCellDef="let item" class="cell-amount text-right"
+                  [class.credit]="item.type === 'CREDIT'"
+                  [class.debit]="item.type === 'DEBIT'">
+                {{ item.type === 'CREDIT' ? '+' : '-' }} {{ item.amount | currency:'INR':'symbol':'1.0-0' }}
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            
+            <!-- Empty State handled by CSS/condition or just empty table -->
           </table>
+          @if (store.recentActivity().length === 0) {
+            <div class="empty-cell">No recent postings recorded in ledger.</div>
+          }
         </div>
       </section>
     </div>
@@ -126,23 +149,8 @@ import { NotificationService } from '../../../core/services/notification.service
 
     .page-subtitle {
       font-size: 0.875rem;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--mat-sys-on-surface-variant);
       margin-top: 0.25rem;
-    }
-
-    .btn-refresh {
-      padding: 0.5rem 1.25rem;
-      border-radius: 8px;
-      background-color: var(--mat-sys-primary, #1e3c72);
-      color: #ffffff;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s ease;
-
-      &:hover {
-        opacity: 0.9;
-      }
     }
 
     .metrics-grid {
@@ -154,8 +162,8 @@ import { NotificationService } from '../../../core/services/notification.service
     .metric-card {
       padding: 1.25rem;
       border-radius: 12px;
-      background-color: var(--mat-sys-surface-container-lowest, #ffffff);
-      border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+      background-color: var(--mat-sys-surface-container-lowest);
+      border: 1px solid var(--mat-sys-outline-variant);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
@@ -165,7 +173,7 @@ import { NotificationService } from '../../../core/services/notification.service
     .metric-label {
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--mat-sys-on-surface-variant);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -173,29 +181,29 @@ import { NotificationService } from '../../../core/services/notification.service
     .metric-value {
       font-size: 1.75rem;
       font-weight: 700;
-      color: var(--mat-sys-on-surface, #191c20);
+      color: var(--mat-sys-on-surface);
 
       &.text-negative {
-        color: var(--mat-sys-error, #ba1a1a);
+        color: var(--mat-sys-error);
       }
       &.text-positive {
-        color: var(--mat-sys-success, #2e7d32);
+        color: var(--mat-sys-success);
       }
     }
 
     .metric-footer {
       font-size: 0.75rem;
-      color: var(--mat-sys-outline, #74777f);
+      color: var(--mat-sys-outline);
 
       .ratio-tag {
         font-weight: 600;
-        color: var(--mat-sys-primary, #1e3c72);
+        color: var(--mat-sys-primary);
       }
     }
 
-    .activity-section {
-      background-color: var(--mat-sys-surface-container-lowest, #ffffff);
-      border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+    .activity-section, .quick-actions-section {
+      background-color: var(--mat-sys-surface-container-lowest);
+      border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 12px;
       padding: 1.25rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
@@ -219,31 +227,18 @@ import { NotificationService } from '../../../core/services/notification.service
       font-weight: 600;
       padding: 0.2rem 0.6rem;
       border-radius: 12px;
-      background-color: var(--mat-sys-secondary-container, #dbf0ff);
-      color: var(--mat-sys-on-secondary-container, #141b2c);
+      background-color: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-on-secondary-container);
     }
 
     .table-wrapper {
       overflow-x: auto;
+      border-radius: 8px;
     }
 
-    .activity-table {
+    table {
       width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-
-      th {
-        text-align: left;
-        padding: 0.75rem;
-        border-bottom: 2px solid var(--mat-sys-outline-variant, #e0e0e0);
-        color: var(--mat-sys-on-surface-variant, #49454f);
-        font-weight: 600;
-      }
-
-      td {
-        padding: 0.85rem 0.75rem;
-        border-bottom: 1px solid var(--mat-sys-surface-container, #eeeeee);
-      }
+    }
 
       .text-right {
         text-align: right;
@@ -258,35 +253,43 @@ import { NotificationService } from '../../../core/services/notification.service
         font-size: 0.75rem;
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
-        background-color: var(--mat-sys-surface-container, #eeeeee);
-        color: var(--mat-sys-on-surface-variant, #49454f);
+        background-color: var(--mat-sys-surface-container);
+        color: var(--mat-sys-on-surface-variant);
       }
 
       .cell-amount {
         font-weight: 600;
 
         &.credit {
-          color: var(--mat-sys-success, #2e7d32);
+          color: var(--mat-sys-success);
         }
         &.debit {
-          color: var(--mat-sys-on-surface, #191c20);
+          color: var(--mat-sys-on-surface);
         }
       }
 
       .empty-cell {
         text-align: center;
         padding: 2rem;
-        color: var(--mat-sys-outline, #74777f);
+        color: var(--mat-sys-outline);
       }
     }
   `]
 })
 export class DashboardPageComponent implements OnInit {
   protected readonly store = inject(DashboardStoreService);
+  protected readonly ledgerStore = inject(LedgerStoreService);
   private readonly notificationService = inject(NotificationService);
+  
+  protected readonly displayedColumns: string[] = ['date', 'description', 'category', 'amount'];
 
   public ngOnInit(): void {
     this.store.fetchLiveNetWorth();
+    this.ledgerStore.loadAll();
+  }
+
+  protected onExpenseSubmit(input: { amount: number; description: string; expenseAccountId: string; assetAccountId: string }): void {
+    this.store.recordExpense(input);
   }
 
   protected onRefreshData(): void {

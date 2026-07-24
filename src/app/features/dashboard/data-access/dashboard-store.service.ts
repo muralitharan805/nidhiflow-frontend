@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { catchError, of } from 'rxjs';
 import { DashboardMetrics, ActivityItem } from '../models/dashboard.model';
 import { LedgerService } from '../../../core/services/ledger.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 /**
  * Signal-driven store service for the Dashboard domain feature integrating NestJS Ledger API.
@@ -11,6 +12,7 @@ import { LedgerService } from '../../../core/services/ledger.service';
 })
 export class DashboardStoreService {
   private readonly ledgerService = inject(LedgerService);
+  private readonly notificationService = inject(NotificationService);
 
   /**
    * Reactive signal for financial metrics state.
@@ -112,5 +114,43 @@ export class DashboardStoreService {
    */
   public updateMetrics(updated: Partial<DashboardMetrics>): void {
     this.metricsSignal.update((current) => ({ ...current, ...updated }));
+  }
+
+  /**
+   * Record a simplified daily expense transaction and sync dashboard.
+   */
+  public recordExpense(input: { amount: number; description: string; expenseAccountId: string; assetAccountId: string }): void {
+    const dto = {
+      description: input.description,
+      lines: [
+        { accountId: input.expenseAccountId, type: 'DEBIT' as const, amount: input.amount },
+        { accountId: input.assetAccountId, type: 'CREDIT' as const, amount: input.amount },
+      ]
+    };
+
+    this.ledgerService.postJournalEntry(dto).pipe(
+      catchError((err) => {
+        this.notificationService.showError('Expense Failed', 'Failed to record expense. Please try again.');
+        return of(null);
+      })
+    ).subscribe((entry) => {
+      if (entry) {
+        this.notificationService.showSuccess('Expense Recorded', 'Your transaction was successfully posted.');
+        this.fetchLiveNetWorth();
+        
+        // Add to local activity feed optimistically
+        this.recentActivitySignal.update(acts => [
+          {
+            id: `act-${Date.now()}`,
+            description: input.description,
+            category: 'Daily Spend',
+            amount: input.amount,
+            type: 'DEBIT',
+            date: new Date().toISOString()
+          },
+          ...acts.slice(0, 4) // Keep only recent 5
+        ]);
+      }
+    });
   }
 }
