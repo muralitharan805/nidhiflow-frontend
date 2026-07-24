@@ -1,10 +1,26 @@
-@use './theme' as *;
+@use './theme' as app-theme;
+@use '@angular/material' as mat;
+
+/* Dark Theme applied by DEFAULT on root html */
+html, html.dark-theme {
+  @include mat.all-component-themes(app-theme.$dark-theme);
+  color-scheme: dark;
+  font-family: var(--app-font-body);
+}
+
+/* Light Theme applies when explicitly toggled by user */
+html.light-theme {
+  @include mat.all-component-colors(app-theme.$light-theme);
+  color-scheme: light;
+}
 
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
 }
 
 *, *:before, *:after {

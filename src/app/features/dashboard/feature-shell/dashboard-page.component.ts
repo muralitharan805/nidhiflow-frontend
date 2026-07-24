@@ -240,39 +240,38 @@ import { MatButtonModule } from '@angular/material/button';
       width: 100%;
     }
 
-      .text-right {
-        text-align: right;
-      }
+    .text-right {
+      text-align: right;
+    }
 
-      .cell-desc {
-        font-weight: 500;
-      }
+    .cell-desc {
+      font-weight: 500;
+    }
 
-      .category-chip {
-        display: inline-block;
-        font-size: 0.75rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        background-color: var(--mat-sys-surface-container);
-        color: var(--mat-sys-on-surface-variant);
-      }
+    .category-chip {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background-color: var(--mat-sys-surface-container);
+      color: var(--mat-sys-on-surface-variant);
+    }
 
-      .cell-amount {
-        font-weight: 600;
+    .cell-amount {
+      font-weight: 600;
 
-        &.credit {
-          color: var(--mat-sys-success);
-        }
-        &.debit {
-          color: var(--mat-sys-on-surface);
-        }
+      &.credit {
+        color: var(--mat-sys-success);
       }
+      &.debit {
+        color: var(--mat-sys-on-surface);
+      }
+    }
 
-      .empty-cell {
-        text-align: center;
-        padding: 2rem;
-        color: var(--mat-sys-outline);
-      }
+    .empty-cell {
+      text-align: center;
+      padding: 2rem;
+      color: var(--mat-sys-outline);
     }
   `]
 })

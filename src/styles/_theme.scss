@@ -3,14 +3,33 @@
 @use './typography' as *;
 @use './utilities' as *;
 
-html {
-  @include mat.theme((
-    color: (
-      theme-type: light,
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
-}
+@include mat.core();
+
+$primary-palette: mat.$azure-palette;
+$tertiary-palette: mat.$blue-palette;
+
+// Default Dark Theme Palette Configuration
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: $primary-palette,
+    tertiary: $tertiary-palette,
+  ),
+  typography: (
+    plain-family: var(--app-font-body),
+    brand-family: var(--app-font-heading),
+  )
+));
+
+// Alternate Light Theme Palette Configuration
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: $primary-palette,
+    tertiary: $tertiary-palette,
+  ),
+  typography: (
+    plain-family: var(--app-font-body),
+    brand-family: var(--app-font-heading),
+  )
+));

@@ -322,27 +322,26 @@ import { SimulationResult, CategoryInflationInput } from '../models/forecasting.
       width: 100%;
     }
 
-      .text-right { text-align: right; }
+    .text-right { text-align: right; }
 
-      .deficit-row {
-        background: rgba(186, 26, 26, 0.04);
-      }
-
-      .year-badge {
-        display: inline-block;
-        padding: 0.15rem 0.4rem;
-        border-radius: 4px;
-        font-weight: 600;
-        background: var(--mat-sys-surface-container);
-      }
-
-      .year-deficit { background: rgba(186, 26, 26, 0.15); color: var(--mat-sys-error); }
-
-      .income-col { color: var(--mat-sys-success); }
-      .cashflow-positive { color: var(--mat-sys-success); font-weight: 600; }
-      .cashflow-negative { color: var(--mat-sys-error); font-weight: 600; }
-      .nw-negative { color: var(--mat-sys-error); }
+    .deficit-row {
+      background: rgba(186, 26, 26, 0.04);
     }
+
+    .year-badge {
+      display: inline-block;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      background: var(--mat-sys-surface-container);
+    }
+
+    .year-deficit { background: rgba(186, 26, 26, 0.15); color: var(--mat-sys-error); }
+
+    .income-col { color: var(--mat-sys-success); }
+    .cashflow-positive { color: var(--mat-sys-success); font-weight: 600; }
+    .cashflow-negative { color: var(--mat-sys-error); font-weight: 600; }
+    .nw-negative { color: var(--mat-sys-error); }
   `]
 })
 export class ForecastingPageComponent {

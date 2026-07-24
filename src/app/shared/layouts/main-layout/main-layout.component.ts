@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
 import { AuthService } from '../../../core/services/auth.service';
 
 /**
@@ -7,7 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
  */
 @Component({
   selector: 'app-main-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ThemeToggleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="app-layout-container">
@@ -27,6 +28,7 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
 
         <div class="header-actions">
+          <app-theme-toggle />
           @if (authService.isAuthenticated()) {
             <span class="user-badge">{{ authService.currentUser()?.name || 'User' }}</span>
             <button type="button" class="btn-logout" (click)="onLogout()">Logout</button>
