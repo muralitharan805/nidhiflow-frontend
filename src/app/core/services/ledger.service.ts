@@ -52,13 +52,13 @@ export interface JournalPostingLineDto {
 }
 
 /**
- * DTO for creating balanced journal entries.
+ * DTO for creating balanced journal entries expected by NestJS backend API.
  */
 export interface CreateJournalEntryDto {
+  entryNumber?: string;
   description: string;
-  reference?: string;
-  postingDate?: string;
-  lines: JournalPostingLineDto[];
+  transactionDate?: string;
+  postings: JournalPostingLineDto[];
 }
 
 /**
@@ -109,7 +109,37 @@ export class LedgerService {
    * @returns Observable emitting created JournalEntryEntity
    */
   public postJournalEntry(dto: CreateJournalEntryDto): Observable<JournalEntryEntity> {
-    return this.apiService.post<JournalEntryEntity>('/ledger/entries', dto);
+    const payload = {
+      ...dto,
+      entryNumber: dto.entryNumber || `JE-${Date.now()}`,
+    };
+    return this.apiService.post<JournalEntryEntity>('/ledger/entries', payload);
+  }
+
+  /**
+   * Reverse an existing journal entry by posting an opposite reversing transaction.
+   *
+   * @param originalEntry Target journal entry to reverse
+   * @param reason Audit rationale for reversal
+   * @returns Observable emitting created reversing JournalEntryEntity
+   */
+  public reverseJournalEntry(
+    originalEntry: { entryNumber: string; description: string; postings: JournalPostingLineDto[] },
+    reason: string
+  ): Observable<JournalEntryEntity> {
+    const reversedPostings: JournalPostingLineDto[] = originalEntry.postings.map((p) => ({
+      accountId: p.accountId,
+      type: p.type === 'DEBIT' ? 'CREDIT' : 'DEBIT',
+      amount: p.amount,
+    }));
+
+    const dto: CreateJournalEntryDto = {
+      entryNumber: `REV-${originalEntry.entryNumber}-${Math.floor(100 + Math.random() * 900)}`,
+      description: `[REVERSAL] ${reason ? reason + ' — ' : ''}${originalEntry.description}`,
+      postings: reversedPostings,
+    };
+
+    return this.postJournalEntry(dto);
   }
 
   /**

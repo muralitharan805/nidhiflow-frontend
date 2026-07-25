@@ -121,8 +121,9 @@ export class DashboardStoreService {
    */
   public recordExpense(input: { amount: number; description: string; expenseAccountId: string; assetAccountId: string }): void {
     const dto = {
+      entryNumber: `JE-EXP-${Date.now()}`,
       description: input.description,
-      lines: [
+      postings: [
         { accountId: input.expenseAccountId, type: 'DEBIT' as const, amount: input.amount },
         { accountId: input.assetAccountId, type: 'CREDIT' as const, amount: input.amount },
       ]

@@ -16,6 +16,7 @@ export interface AccountEntity {
   code: string;
   name: string;
   type: AccountType;
+  balance?: number;
   description?: string;
   parentId?: string;
   children?: AccountEntity[];
@@ -53,9 +54,11 @@ export interface JournalPostingLineInput {
  * DTO for creating a balanced double-entry journal entry.
  */
 export interface CreateJournalEntryInput {
+  entryNumber?: string;
   description: string;
   reference?: string;
-  lines: JournalPostingLineInput[];
+  postings?: JournalPostingLineInput[];
+  lines?: JournalPostingLineInput[];
 }
 
 /**

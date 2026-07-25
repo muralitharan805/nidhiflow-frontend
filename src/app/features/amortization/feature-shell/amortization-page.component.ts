@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,7 +16,18 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
  */
 @Component({
   selector: 'app-amortization-page',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, DecimalPipe, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatTableModule],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    CurrencyPipe,
+    DatePipe,
+    DecimalPipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatTableModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="amortization-page">
@@ -135,53 +146,82 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
               </div>
             </div>
 
-            <!-- Schedule Table (first 12 months) -->
-            <div class="schedule-preview">
-              <h4 class="schedule-title">Amortization Schedule (First 12 Months)</h4>
-              <div class="table-scroll mat-elevation-z1">
-                <table mat-table [dataSource]="activeLoan()!.schedule.slice(0, 12)" aria-label="EMI amortization schedule">
-                  
-                  <!-- Month Column -->
-                  <ng-container matColumnDef="month">
-                    <th mat-header-cell *matHeaderCellDef> Month </th>
-                    <td mat-cell *matCellDef="let row"> {{ row.month }} </td>
-                  </ng-container>
+              <!-- Prepayment Simulator Section -->
+              <div class="prepayment-card mt-4">
+                <h4 class="sim-title">⚡ Prepayment Savings Simulator</h4>
+                <div class="sim-inputs">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Extra Lump-Sum Prepayment (₹)</mat-label>
+                    <input matInput type="number" [(ngModel)]="prepaymentAmount" placeholder="100000" />
+                  </mat-form-field>
+                </div>
 
-                  <!-- EMI Column -->
-                  <ng-container matColumnDef="emi">
-                    <th mat-header-cell *matHeaderCellDef class="text-right"> EMI </th>
-                    <td mat-cell *matCellDef="let row" class="text-right"> {{ row.emi | currency:'INR':'symbol':'1.0-0' }} </td>
-                  </ng-container>
-
-                  <!-- Principal Column -->
-                  <ng-container matColumnDef="principal">
-                    <th mat-header-cell *matHeaderCellDef class="text-right"> Principal </th>
-                    <td mat-cell *matCellDef="let row" class="text-right principal-col"> {{ row.principalComponent | currency:'INR':'symbol':'1.0-0' }} </td>
-                  </ng-container>
-
-                  <!-- Interest Column -->
-                  <ng-container matColumnDef="interest">
-                    <th mat-header-cell *matHeaderCellDef class="text-right"> Interest </th>
-                    <td mat-cell *matCellDef="let row" class="text-right interest-col"> {{ row.interestComponent | currency:'INR':'symbol':'1.0-0' }} </td>
-                  </ng-container>
-
-                  <!-- Balance Column -->
-                  <ng-container matColumnDef="balance">
-                    <th mat-header-cell *matHeaderCellDef class="text-right"> Balance </th>
-                    <td mat-cell *matCellDef="let row" class="text-right"> {{ row.closingBalance | currency:'INR':'symbol':'1.0-0' }} </td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                </table>
+                @if (prepaymentAmount() > 0) {
+                  <div class="sim-results">
+                    <div class="sim-metric text-success">
+                      <span>Total Interest Saved:</span>
+                      <strong>{{ estimatedInterestSaved() | currency:'INR':'symbol':'1.0-0' }}</strong>
+                    </div>
+                    <div class="sim-metric text-primary">
+                      <span>Tenure Reduced By:</span>
+                      <strong>{{ estimatedMonthsSaved() }} Months!</strong>
+                    </div>
+                  </div>
+                }
               </div>
-            </div>
-          } @else {
-            <div class="empty-state">
-              <p>📋 Create a loan to see the payoff countdown and amortization schedule.</p>
-            </div>
-          }
-        </section>
+
+              <!-- Schedule Table (first 12 months) -->
+              <div class="schedule-preview">
+                <div class="flex-between mb-2">
+                  <h4 class="schedule-title">Amortization Schedule (First 12 Months)</h4>
+                  <button mat-stroked-button color="primary" (click)="onPostEmi()">
+                    ⚡ Post Current Month EMI Entry
+                  </button>
+                </div>
+                <div class="table-scroll mat-elevation-z1">
+                  <table mat-table [dataSource]="activeLoan()!.schedule.slice(0, 12)" aria-label="EMI amortization schedule">
+                    
+                    <!-- Month Column -->
+                    <ng-container matColumnDef="month">
+                      <th mat-header-cell *matHeaderCellDef> Month </th>
+                      <td mat-cell *matCellDef="let row"> {{ row.month }} </td>
+                    </ng-container>
+
+                    <!-- EMI Column -->
+                    <ng-container matColumnDef="emi">
+                      <th mat-header-cell *matHeaderCellDef class="text-right"> EMI </th>
+                      <td mat-cell *matCellDef="let row" class="text-right"> {{ row.emi | currency:'INR':'symbol':'1.0-0' }} </td>
+                    </ng-container>
+
+                    <!-- Principal Column -->
+                    <ng-container matColumnDef="principal">
+                      <th mat-header-cell *matHeaderCellDef class="text-right"> Principal </th>
+                      <td mat-cell *matCellDef="let row" class="text-right principal-col"> {{ row.principalComponent | currency:'INR':'symbol':'1.0-0' }} </td>
+                    </ng-container>
+
+                    <!-- Interest Column -->
+                    <ng-container matColumnDef="interest">
+                      <th mat-header-cell *matHeaderCellDef class="text-right"> Interest </th>
+                      <td mat-cell *matCellDef="let row" class="text-right interest-col"> {{ row.interestComponent | currency:'INR':'symbol':'1.0-0' }} </td>
+                    </ng-container>
+
+                    <!-- Balance Column -->
+                    <ng-container matColumnDef="balance">
+                      <th mat-header-cell *matHeaderCellDef class="text-right"> Balance </th>
+                      <td mat-cell *matCellDef="let row" class="text-right"> {{ row.closingBalance | currency:'INR':'symbol':'1.0-0' }} </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                  </table>
+                </div>
+              </div>
+            } @else {
+              <div class="empty-state">
+                <p>📋 Create a loan to see the payoff countdown and amortization schedule.</p>
+              </div>
+            }
+          </section>
       </div>
     </div>
   `,
@@ -348,6 +388,24 @@ export class AmortizationPageComponent {
     startDate: ['', Validators.required],
   });
 
+  protected readonly prepaymentAmount = signal<number>(0);
+
+  protected readonly estimatedInterestSaved = computed(() => {
+    const extra = this.prepaymentAmount();
+    const loan = this.activeLoan();
+    if (!extra || !loan) return 0;
+    const r = loan.annualInterestRate / 100 / 12;
+    // Estimated interest saved approximation based on compound duration reduction
+    return Math.round(extra * r * (loan.tenureMonths / 2));
+  });
+
+  protected readonly estimatedMonthsSaved = computed(() => {
+    const extra = this.prepaymentAmount();
+    const loan = this.activeLoan();
+    if (!extra || !loan || loan.monthlyEmi === 0) return 0;
+    return Math.min(loan.tenureMonths, Math.round(extra / loan.monthlyEmi));
+  });
+
   protected onCreateLoan(): void {
     if (this.loanForm.invalid) return;
     this.isLoading.set(true);
@@ -369,6 +427,31 @@ export class AmortizationPageComponent {
         this.isLoading.set(false);
         this.notificationService.showError('Loan Error', 'Could not create loan. Check your inputs and linked account.');
       }
+    });
+  }
+
+  protected onPostEmi(): void {
+    const loan = this.activeLoan();
+    if (!loan || loan.schedule.length === 0) return;
+    const firstRow = loan.schedule[0];
+
+    // Find accounts for EMI double-entry: Liability Loan Account, Asset Bank Account, Interest Expense Account
+    const assetAcc = this.ledgerStore.accounts().find((a) => a.type === 'ASSET');
+    const interestExpenseAcc = this.ledgerStore.accounts().find((a) => a.type === 'EXPENSE');
+
+    if (!assetAcc || !interestExpenseAcc) {
+      this.notificationService.showError('Posting Failed', 'Need at least 1 ASSET account and 1 EXPENSE account in Chart of Accounts.');
+      return;
+    }
+
+    this.ledgerStore.postJournalEntry({
+      entryNumber: `EMI-${loan.id.slice(0, 6)}-M1`,
+      description: `Monthly EMI Payment - Loan #${loan.id.slice(0, 6)}`,
+      postings: [
+        { accountId: loan.accountId, type: 'DEBIT', amount: firstRow.principalComponent },
+        { accountId: interestExpenseAcc.id, type: 'DEBIT', amount: firstRow.interestComponent },
+        { accountId: assetAcc.id, type: 'CREDIT', amount: firstRow.emi },
+      ],
     });
   }
 }

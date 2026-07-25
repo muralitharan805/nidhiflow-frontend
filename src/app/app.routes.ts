@@ -39,6 +39,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/forecasting/forecasting.routes').then((m) => m.FORECASTING_ROUTES),
       },
+      {
+        path: 'reports',
+        title: 'Financial Reports & Statements',
+        loadChildren: () =>
+          import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES),
+      },
     ],
   },
   {

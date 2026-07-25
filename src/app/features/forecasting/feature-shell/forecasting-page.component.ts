@@ -22,10 +22,15 @@ import { SimulationResult, CategoryInflationInput } from '../models/forecasting.
   template: `
     <div class="forecasting-page">
       <header class="page-header">
-        <h2 class="page-title">📈 Financial Forecasting Simulator</h2>
-        <p class="page-subtitle">
-          Multi-year What-If scenario engine · Eₖ,ₜ = Eₖ,₀ × (1 + iₖ)ᵗ · Deficit Crossover Detection
-        </p>
+        <div class="flex-between">
+          <div>
+            <h2 class="page-title">📈 Financial Forecasting Simulator</h2>
+            <p class="page-subtitle">
+              Multi-year What-If scenario engine · Eₖ,ₜ = Eₖ,₀ × (1 + iₖ)ᵗ · Deficit Crossover Detection
+            </p>
+          </div>
+          <span class="sandbox-badge">🔒 Isolated Sandbox Mode (Real Ledger Untouched)</span>
+        </div>
       </header>
 
       <div class="simulator-layout">
@@ -212,8 +217,19 @@ import { SimulationResult, CategoryInflationInput } from '../models/forecasting.
   `,
   styles: [`
     .forecasting-page { display: flex; flex-direction: column; gap: 1.5rem; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
     .page-title { font-size: 1.4rem; font-weight: 700; margin: 0; }
     .page-subtitle { font-size: 0.85rem; color: var(--mat-sys-on-surface-variant); margin: 0.25rem 0 0; }
+
+    .sandbox-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      border: 1px solid var(--mat-sys-outline-variant);
+    }
 
     .simulator-layout {
       display: grid;

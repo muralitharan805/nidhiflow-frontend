@@ -4,6 +4,7 @@ import { LedgerStoreService } from '../data-access/ledger-store.service';
 import { ChartOfAccountsComponent } from '../ui/chart-of-accounts.component';
 import { JournalEntryFormComponent } from '../ui/journal-entry-form.component';
 import { CreateAccountFormComponent } from '../ui/create-account-form.component';
+import { JournalEntriesListComponent } from '../ui/journal-entries-list.component';
 import { CreateJournalEntryInput, AccountType } from '../models/ledger.model';
 
 /**
@@ -11,7 +12,7 @@ import { CreateJournalEntryInput, AccountType } from '../models/ledger.model';
  */
 @Component({
   selector: 'app-ledger-page',
-  imports: [CurrencyPipe, ChartOfAccountsComponent, JournalEntryFormComponent, CreateAccountFormComponent],
+  imports: [CurrencyPipe, ChartOfAccountsComponent, JournalEntryFormComponent, CreateAccountFormComponent, JournalEntriesListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ledger-page">
@@ -74,6 +75,12 @@ import { CreateJournalEntryInput, AccountType } from '../models/ledger.model';
             />
           </section>
         </div>
+
+        <!-- Posted Journal Entries Section with Reversal Support -->
+        <app-journal-entries-list
+          [entries]="store.recentEntries()"
+          (reverseRequested)="onReverseRequested($event)"
+        />
       }
     </div>
   `,
@@ -230,5 +237,9 @@ export class LedgerPageComponent implements OnInit {
 
   protected onEntrySubmit(input: CreateJournalEntryInput): void {
     this.store.postJournalEntry(input);
+  }
+
+  protected onReverseRequested(event: { entry: { entryNumber: string; description: string; postings: { accountId: string; type: 'DEBIT' | 'CREDIT'; amount: number }[] }; reason: string }): void {
+    this.store.reverseJournalEntry(event.entry, event.reason);
   }
 }
