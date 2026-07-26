@@ -1,0 +1,55 @@
+name: nidhi-flow
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - nidhi-network
+
+  backend:
+    build:
+      context: ../nidhi-flow-backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres_secure_pass@postgres:5432/nidhi_flow_db?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nidhi-network
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: nidhi_flow_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nidhi_flow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nidhi-network
+
+networks:
+  nidhi-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

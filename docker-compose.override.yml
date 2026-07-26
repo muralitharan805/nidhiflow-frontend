@@ -1,0 +1,18 @@
+services:
+  frontend:
+    ports:
+      - "4200:4200"
+    command: pnpm run start --host 0.0.0.0
+    volumes:
+      - ./:/app
+      - /app/node_modules
+
+  backend:
+    ports:
+      - "3000:3000"
+    command: pnpm run start:dev
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ../nidhi-flow-backend:/app
+      - /app/node_modules

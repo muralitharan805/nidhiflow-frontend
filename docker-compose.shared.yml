@@ -1,0 +1,42 @@
+name: nidhi-infra
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: nidhi-postgres-db
+    environment:
+      POSTGRES_DB: nidhi_flow_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - nidhi_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nidhi_flow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shared-infra-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: nidhi-redis-cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shared-infra-network
+
+networks:
+  shared-infra-network:
+    name: shared-infra-network
+    driver: bridge
+
+volumes:
+  nidhi_postgres_data:

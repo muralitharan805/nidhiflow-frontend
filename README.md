@@ -204,3 +204,44 @@ Frontend available at: `http://localhost:4200`
 ## 📜 License
 
 MIT © Murali — NidhiFlow Personal Finance Engine
+
+---
+
+## 🐳 Docker Containerization & Execution Guide
+
+NidhiFlow provides enterprise-grade multi-stage Docker containerization supporting local development, standalone infrastructure, and production setups.
+
+### Mode A: Standalone Local Development Stack
+Run the entire frontend, backend, and PostgreSQL + pgvector + Redis infrastructure with live hot-reloading:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+```
+
+### Mode B: Production Stack Deployment
+Build and run optimized non-root production runner containers with resource limits and healthchecks:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+### Mode C: Standalone Infrastructure Services Only
+Run standalone PostgreSQL 16 (`pgvector`) and Redis cache services:
+
+```bash
+docker compose -f docker-compose.shared.yml up -d
+```
+
+### Useful Management Commands
+
+```bash
+# View live application logs
+docker compose logs -f
+
+# Check container health statuses
+docker compose ps
+
+# Shutdown containers and preserve data volumes
+docker compose down
+```
+
