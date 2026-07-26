@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { DashboardStoreService } from '../data-access/dashboard-store.service';
 import { LedgerStoreService } from '../../ledger/data-access/ledger-store.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -12,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
  */
 @Component({
   selector: 'app-dashboard-page',
-  imports: [CurrencyPipe, DatePipe, QuickExpenseFormComponent, MatTableModule, MatButtonModule],
+  imports: [CurrencyPipe, DatePipe, RouterLink, QuickExpenseFormComponent, MatTableModule, MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dashboard-page-container">
@@ -79,8 +80,11 @@ import { MatButtonModule } from '@angular/material/button';
       <!-- Recent Transactions Section -->
       <section class="activity-section">
         <div class="section-header">
-          <h3>Recent Journal Postings</h3>
-          <span class="badge-count">{{ store.recentActivity().length }} entries</span>
+          <div class="header-left">
+            <h3>Recent Journal Postings</h3>
+            <span class="badge-count">{{ store.recentActivity().length }} entries</span>
+          </div>
+          <a routerLink="/ledger/entries" class="view-all-link">View All Entries →</a>
         </div>
 
         <div class="table-wrapper mat-elevation-z1">
@@ -103,6 +107,14 @@ import { MatButtonModule } from '@angular/material/button';
               <th mat-header-cell *matHeaderCellDef> Category </th>
               <td mat-cell *matCellDef="let item"> 
                 <span class="category-chip">{{ item.category }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Paid From / Source Account Column -->
+            <ng-container matColumnDef="sourceAccount">
+              <th mat-header-cell *matHeaderCellDef> Paid From </th>
+              <td mat-cell *matCellDef="let item"> 
+                <span class="source-chip">{{ item.sourceAccount || 'Cash / Bank' }}</span>
               </td>
             </ng-container>
 
@@ -222,6 +234,24 @@ import { MatButtonModule } from '@angular/material/button';
       }
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .view-all-link {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--mat-sys-primary);
+      text-decoration: none;
+      transition: color 0.15s ease-in-out;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
     .badge-count {
       font-size: 0.75rem;
       font-weight: 600;
@@ -253,8 +283,19 @@ import { MatButtonModule } from '@angular/material/button';
       font-size: 0.75rem;
       padding: 0.2rem 0.5rem;
       border-radius: 4px;
-      background-color: var(--mat-sys-surface-container);
-      color: var(--mat-sys-on-surface-variant);
+      background-color: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      font-weight: 500;
+    }
+
+    .source-chip {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background-color: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-on-secondary-container);
+      font-weight: 500;
     }
 
     .cell-amount {
@@ -280,7 +321,7 @@ export class DashboardPageComponent implements OnInit {
   protected readonly ledgerStore = inject(LedgerStoreService);
   private readonly notificationService = inject(NotificationService);
   
-  protected readonly displayedColumns: string[] = ['date', 'description', 'category', 'amount'];
+  protected readonly displayedColumns: string[] = ['date', 'description', 'category', 'sourceAccount', 'amount'];
 
   public ngOnInit(): void {
     this.store.fetchLiveNetWorth();
@@ -293,6 +334,7 @@ export class DashboardPageComponent implements OnInit {
 
   protected onRefreshData(): void {
     this.store.fetchLiveNetWorth();
+    this.ledgerStore.loadAll(false);
     this.notificationService.showSuccess('Ledger Synchronized', 'Financial metrics and balances updated.');
   }
 }

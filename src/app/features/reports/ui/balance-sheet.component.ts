@@ -2,6 +2,9 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { BalanceSheetData } from '../models/reports.model';
 
+/**
+ * Financial statement component rendering Assets vs Liabilities & Equity double-entry Balance Sheet.
+ */
 @Component({
   selector: 'app-balance-sheet',
   imports: [CurrencyPipe],
@@ -21,7 +24,7 @@ import { BalanceSheetData } from '../models/reports.model';
       <div class="balance-sheet-grid">
         <!-- Assets Column -->
         <div class="bs-column">
-          <h4 class="column-title text-success">ASSETS (சொத்துக்கள்)</h4>
+          <h4 class="column-title text-success">ASSETS (Assets & Holdings)</h4>
           <div class="items-list">
             @for (item of data().assets.items; track item.code) {
               <div class="item-row">
@@ -38,7 +41,7 @@ import { BalanceSheetData } from '../models/reports.model';
 
         <!-- Liabilities & Equity Column -->
         <div class="bs-column">
-          <h4 class="column-title text-error">LIABILITIES (பொறுப்புகள் / கடன்கள்)</h4>
+          <h4 class="column-title text-error">LIABILITIES (Debts & Loans)</h4>
           <div class="items-list">
             @for (item of data().liabilities.items; track item.code) {
               <div class="item-row">
@@ -52,7 +55,7 @@ import { BalanceSheetData } from '../models/reports.model';
             <span class="font-mono font-bold">{{ data().liabilities.total | currency:'INR':'symbol':'1.0-0' }}</span>
           </div>
 
-          <h4 class="column-title text-primary mt-4">EQUITY (மூலதனம் / நிகர மதிப்பு)</h4>
+          <h4 class="column-title text-primary mt-4">EQUITY (Capital & Reserves)</h4>
           <div class="items-list">
             @for (item of data().equity.items; track item.code) {
               <div class="item-row">

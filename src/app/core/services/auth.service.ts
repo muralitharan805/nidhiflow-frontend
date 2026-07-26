@@ -1,7 +1,19 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, tap, map } from 'rxjs';
+import { Router } from '@angular/router';
+import { Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
+import { LedgerStoreService } from '../../features/ledger/data-access/ledger-store.service';
+import { DashboardStoreService } from '../../features/dashboard/data-access/dashboard-store.service';
+
+/**
+ * Enumeration of user roles within NidhiFlow.
+ */
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  MANAGER = 'MANAGER',
+}
 
 /**
  * User account entity representation matching NestJS backend.
@@ -10,7 +22,7 @@ export interface UserEntity {
   id: string;
   email: string;
   name: string;
-  role: 'ADMIN' | 'USER' | 'MANAGER';
+  role: UserRole | 'ADMIN' | 'USER' | 'MANAGER';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -24,7 +36,7 @@ export interface AuthTokenResult {
 }
 
 /**
- * Storage key constant for authentication token.
+ * Storage key constants for authentication token and user profile.
  */
 const AUTH_TOKEN_KEY = 'nidhiflow_auth_token';
 const AUTH_USER_KEY = 'nidhiflow_auth_user';
@@ -38,6 +50,9 @@ const AUTH_USER_KEY = 'nidhiflow_auth_user';
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly apiService = inject(ApiService);
+  private readonly router = inject(Router);
+  private readonly ledgerStore = inject(LedgerStoreService);
+  private readonly dashboardStore = inject(DashboardStoreService);
 
   /**
    * Internal reactive signal holding the authenticated user state.
@@ -73,6 +88,7 @@ export class AuthService {
   public login(credentials: { email: string; password: string }): Observable<AuthTokenResult> {
     return this.apiService.post<AuthTokenResult>('/auth/login', credentials).pipe(
       tap((res) => {
+        this.clearStores();
         this.setSession(res.accessToken, res.user);
       })
     );
@@ -80,6 +96,7 @@ export class AuthService {
 
   /**
    * Execute user registration against NestJS auth endpoint.
+   * Resets existing store state before saving new credentials.
    *
    * @param payload User registration fields
    * @returns Observable emitting AuthTokenResult payload
@@ -87,6 +104,7 @@ export class AuthService {
   public register(payload: { name: string; email: string; password: string }): Observable<AuthTokenResult> {
     return this.apiService.post<AuthTokenResult>('/auth/register', payload).pipe(
       tap((res) => {
+        this.clearStores();
         this.setSession(res.accessToken, res.user);
       })
     );
@@ -98,11 +116,17 @@ export class AuthService {
    * @returns Auth token string or null
    */
   public getToken(): string | null {
-    return this.authTokenSignal();
+    const signalToken = this.authTokenSignal();
+    if (signalToken) return signalToken;
+
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem('token');
+    }
+    return null;
   }
 
   /**
-   * Sets authentication state upon successful user login.
+   * Sets authentication state upon successful user login or registration.
    *
    * @param token Authentication Bearer token string
    * @param user User profile payload
@@ -114,11 +138,12 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      localStorage.setItem('token', token);
     }
   }
 
   /**
-   * Clears active session and logs out user.
+   * Clears active session, purges localStorage, resets all domain stores, and navigates to login page.
    */
   public logout(): void {
     this.authTokenSignal.set(null);
@@ -127,7 +152,21 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.clear();
     }
+
+    this.clearStores();
+    void this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Resets all domain feature stores (Ledger, Dashboard) to prevent cross-user data leakage.
+   */
+  private clearStores(): void {
+    this.ledgerStore.resetStore();
+    this.dashboardStore.resetStore();
   }
 
   /**
@@ -135,7 +174,7 @@ export class AuthService {
    */
   private getInitialToken(): string | null {
     if (isPlatformBrowser(this.platformId)) {
-      return localStorage.getItem(AUTH_TOKEN_KEY);
+      return localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem('token');
     }
     return null;
   }
@@ -145,7 +184,7 @@ export class AuthService {
    */
   private getInitialUser(): UserEntity | null {
     if (isPlatformBrowser(this.platformId)) {
-      const raw = localStorage.getItem(AUTH_USER_KEY);
+      const raw = localStorage.getItem(AUTH_USER_KEY) || localStorage.getItem('user');
       if (raw) {
         try {
           return JSON.parse(raw) as UserEntity;

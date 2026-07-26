@@ -47,6 +47,9 @@ export interface NetWorthSummary {
  */
 export interface JournalPostingLineDto {
   accountId: string;
+  accountName?: string;
+  accountCode?: string;
+  accountType?: AccountType;
   type: 'DEBIT' | 'CREDIT';
   amount: number;
 }
@@ -73,6 +76,14 @@ export interface JournalEntryEntity {
   createdAt: string;
 }
 
+export interface AccountCategoryMeta {
+  type: AccountType;
+  label: string;
+  icon: string;
+  description: string;
+  colorClass?: string;
+}
+
 /**
  * Enterprise service consuming NestJS Ledger & Net Worth endpoints.
  */
@@ -81,6 +92,13 @@ export interface JournalEntryEntity {
 })
 export class LedgerService {
   private readonly apiService = inject(ApiService);
+
+  /**
+   * Fetch category guidance metadata from database via backend.
+   */
+  public getCategoryMetadata(): Observable<AccountCategoryMeta[]> {
+    return this.apiService.get<AccountCategoryMeta[]>('/ledger/categories');
+  }
 
   /**
    * Calculate current Net Worth summary from double-entry ledger.
@@ -100,6 +118,19 @@ export class LedgerService {
   public getAccounts(query?: { type?: AccountType; search?: string; page?: number; limit?: number }): Observable<{ items: AccountEntity[]; total: number }> {
     const params = this.apiService.buildHttpParams(query || {});
     return this.apiService.get<{ items: AccountEntity[]; total: number }>('/ledger/accounts', { params });
+  }
+
+  /**
+   * Fetch recent journal entries listing from backend API.
+   *
+   * @param limit Maximum number of recent entries to fetch (default: 50)
+   * @returns Observable emitting array of journal entries with postings
+   */
+  public getJournalEntries(limit = 50): Observable<
+    { id: string; entryNumber: string; description: string; transactionDate?: string; createdAt: string; postings: JournalPostingLineDto[] }[]
+  > {
+    const params = this.apiService.buildHttpParams({ limit });
+    return this.apiService.get('/ledger/entries', { params });
   }
 
   /**

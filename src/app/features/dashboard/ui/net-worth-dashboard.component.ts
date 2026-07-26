@@ -7,6 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
+/**
+ * State representation for Net Worth dashboard metrics and chart.
+ */
 interface NetWorthState {
   totalAssets: number;
   totalLiabilities: number;
@@ -14,6 +17,9 @@ interface NetWorthState {
   isLoading: boolean;
 }
 
+/**
+ * Presentational component displaying total assets, liabilities, net worth cards, and historical trend chart.
+ */
 @Component({
   selector: 'app-net-worth-dashboard',
   standalone: true,

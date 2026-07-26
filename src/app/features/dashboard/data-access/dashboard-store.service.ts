@@ -18,51 +18,18 @@ export class DashboardStoreService {
    * Reactive signal for financial metrics state.
    */
   private readonly metricsSignal = signal<DashboardMetrics>({
-    totalAssets: 485000,
-    totalLiabilities: 120000,
-    netWorth: 365000,
-    monthlyIncome: 45000,
-    monthlyExpenses: 185000,
-    netCashFlow: -140000,
+    totalAssets: 0,
+    totalLiabilities: 0,
+    netWorth: 0,
+    monthlyIncome: 0,
+    monthlyExpenses: 0,
+    netCashFlow: 0,
   });
 
   /**
    * Reactive signal for recent activity log.
    */
-  private readonly recentActivitySignal = signal<ActivityItem[]>([
-    {
-      id: 'act-1',
-      description: 'Monthly Salary Credit',
-      category: 'Income',
-      amount: 45000,
-      type: 'CREDIT',
-      date: '2026-07-01',
-    },
-    {
-      id: 'act-2',
-      description: 'Home Loan EMI Repayment',
-      category: 'Debt Repayment',
-      amount: 85000,
-      type: 'DEBIT',
-      date: '2026-07-05',
-    },
-    {
-      id: 'act-3',
-      description: 'Grocery & Supplies',
-      category: 'Living Expenses',
-      amount: 15000,
-      type: 'DEBIT',
-      date: '2026-07-10',
-    },
-    {
-      id: 'act-4',
-      description: 'SIP Mutual Fund Investment',
-      category: 'Investments',
-      amount: 25000,
-      type: 'DEBIT',
-      date: '2026-07-15',
-    },
-  ]);
+  private readonly recentActivitySignal = signal<ActivityItem[]>([]);
 
   /**
    * Public read-only metrics signal.
@@ -103,6 +70,32 @@ export class DashboardStoreService {
             totalLiabilities: data.totalLiabilities,
             netWorth: data.netWorth,
           }));
+        }
+      });
+
+    this.ledgerService
+      .getJournalEntries(5)
+      .pipe(catchError(() => of([])))
+      .subscribe((entries) => {
+        if (entries && entries.length > 0) {
+          const activities: ActivityItem[] = entries.map((e) => {
+            const debitPosting = e.postings.find((p) => p.type === 'DEBIT' || p.accountType === 'EXPENSE' || p.accountType === 'INCOME');
+            const creditPosting = e.postings.find((p) => p.type === 'CREDIT' || p.accountType === 'ASSET' || p.accountType === 'LIABILITY');
+            
+            const categoryName = debitPosting?.accountName || (e.description.startsWith('[REVERSAL]') ? 'Reversal' : 'General Ledger');
+            const sourceAccName = creditPosting?.accountName || (e.postings.length > 1 ? e.postings[1].accountName : 'Cash / Bank');
+
+            return {
+              id: e.id,
+              description: e.description,
+              category: categoryName,
+              sourceAccount: sourceAccName,
+              amount: debitPosting ? debitPosting.amount : (e.postings[0]?.amount || 0),
+              type: 'DEBIT',
+              date: e.transactionDate || e.createdAt,
+            };
+          });
+          this.recentActivitySignal.set(activities);
         }
       });
   }
@@ -153,5 +146,20 @@ export class DashboardStoreService {
         ]);
       }
     });
+  }
+
+  /**
+   * Resets metrics and activity signals to empty defaults for clean session termination.
+   */
+  public resetStore(): void {
+    this.metricsSignal.set({
+      totalAssets: 0,
+      totalLiabilities: 0,
+      netWorth: 0,
+      monthlyIncome: 0,
+      monthlyExpenses: 0,
+      netCashFlow: 0,
+    });
+    this.recentActivitySignal.set([]);
   }
 }

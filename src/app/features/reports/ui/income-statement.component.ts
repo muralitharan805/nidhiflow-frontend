@@ -2,6 +2,9 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { IncomeStatementData } from '../models/reports.model';
 
+/**
+ * Financial statement component rendering Income vs Expense items and Net Profit/Loss calculations.
+ */
 @Component({
   selector: 'app-income-statement',
   imports: [CurrencyPipe],

@@ -53,10 +53,19 @@ import { AuthService } from '../../../core/services/auth.service';
             <a
               routerLink="/ledger"
               routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
               class="nav-item"
             >
               <span class="nav-icon">📖</span>
               <span class="nav-label">Ledger</span>
+            </a>
+            <a
+              routerLink="/ledger/entries"
+              routerLinkActive="active"
+              class="nav-item"
+            >
+              <span class="nav-icon">📜</span>
+              <span class="nav-label">Journal Entries</span>
             </a>
             <a
               routerLink="/loans"

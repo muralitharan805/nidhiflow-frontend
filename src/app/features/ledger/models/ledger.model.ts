@@ -9,6 +9,17 @@ export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE
 export type PostingType = 'DEBIT' | 'CREDIT';
 
 /**
+ * Dynamic Account Category guidance metadata returned from backend DB.
+ */
+export interface AccountCategoryMeta {
+  type: AccountType;
+  label: string;
+  icon: string;
+  description: string;
+  colorClass?: string;
+}
+
+/**
  * Chart of Accounts single account head entity.
  */
 export interface AccountEntity {
@@ -46,6 +57,9 @@ export interface NetWorthSummary {
  */
 export interface JournalPostingLineInput {
   accountId: string;
+  accountName?: string;
+  accountCode?: string;
+  accountType?: AccountType;
   type: PostingType;
   amount: number;
 }

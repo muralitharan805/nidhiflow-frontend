@@ -17,6 +17,7 @@ export interface ActivityItem {
   id: string;
   description: string;
   category: string;
+  sourceAccount?: string;
   amount: number;
   type: 'DEBIT' | 'CREDIT';
   date: string;

@@ -6,6 +6,7 @@ import {
   AccountEntity,
   NetWorthSummary,
   AccountType,
+  AccountCategoryMeta,
   CreateJournalEntryInput,
 } from '../models/ledger.model';
 
@@ -17,25 +18,48 @@ export class LedgerStoreService {
   private readonly ledgerService = inject(LedgerService);
   private readonly notificationService = inject(NotificationService);
 
-  private readonly accountsSignal = signal<AccountEntity[]>([]);
+  private readonly rawAccountsSignal = signal<AccountEntity[]>([]);
+  private readonly categoryMetaSignal = signal<AccountCategoryMeta[]>([]);
   private readonly netWorthSignal = signal<NetWorthSummary>({ totalAssets: 0, totalLiabilities: 0, netWorth: 0 });
   private readonly isLoadingSignal = signal<boolean>(false);
   private readonly recentEntriesSignal = signal<
-    { id: string; entryNumber: string; description: string; transactionDate?: string; createdAt: string; postings: { accountId: string; type: 'DEBIT' | 'CREDIT'; amount: number }[] }[]
-  >([
-    {
-      id: 'entry-seed-1',
-      entryNumber: 'JE-1001',
-      description: 'Opening Balance Setup',
-      createdAt: new Date().toISOString(),
-      postings: [
-        { accountId: 'acc-asset', type: 'DEBIT', amount: 50000 },
-        { accountId: 'acc-equity', type: 'CREDIT', amount: 50000 },
-      ],
-    },
-  ]);
+    { id: string; entryNumber: string; description: string; transactionDate?: string; createdAt: string; postings: { accountId: string; accountName?: string; accountCode?: string; accountType?: AccountType; type: 'DEBIT' | 'CREDIT'; amount: number }[] }[]
+  >([]);
 
-  public readonly accounts = this.accountsSignal.asReadonly();
+  /**
+   * Computed accounts array with live calculated balances from posted journal entries.
+   */
+  public readonly accounts = computed<AccountEntity[]>(() => {
+    const rawAccounts = this.rawAccountsSignal();
+    const entries = this.recentEntriesSignal();
+
+    return rawAccounts.map((acc) => {
+      let debitSum = 0;
+      let creditSum = 0;
+
+      entries.forEach((entry) => {
+        if (entry.postings) {
+          entry.postings.forEach((p) => {
+            if (p.accountId === acc.id) {
+              if (p.type === 'DEBIT') debitSum += p.amount;
+              if (p.type === 'CREDIT') creditSum += p.amount;
+            }
+          });
+        }
+      });
+
+      const isDebitNormal = acc.type === 'ASSET' || acc.type === 'EXPENSE';
+      const computedBalance = isDebitNormal ? (debitSum - creditSum) : (creditSum - debitSum);
+      const balance = (acc.balance && acc.balance !== 0) ? acc.balance : computedBalance;
+
+      return {
+        ...acc,
+        balance,
+      };
+    });
+  });
+
+  public readonly categoryMeta = this.categoryMetaSignal.asReadonly();
   public readonly netWorth = this.netWorthSignal.asReadonly();
   public readonly isLoading = this.isLoadingSignal.asReadonly();
   public readonly recentEntries = this.recentEntriesSignal.asReadonly();
@@ -43,17 +67,28 @@ export class LedgerStoreService {
   /** Computed accounts grouped by type for tree display. */
   public readonly accountsByType = computed(() => {
     const types: AccountType[] = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'];
+    const accs = this.accounts();
     return types.map((type) => ({
       type,
-      accounts: this.accountsSignal().filter((a) => a.type === type),
+      accounts: accs.filter((a) => a.type === type),
     }));
   });
 
   /**
-   * Fetch all accounts and net worth from the backend API.
+   * Fetch all accounts, category metadata, and net worth from the backend API.
+   *
+   * @param showLoading Whether to toggle global loading spinner (default: true)
    */
-  public loadAll(): void {
-    this.isLoadingSignal.set(true);
+  public loadAll(showLoading = true): void {
+    if (showLoading) {
+      this.isLoadingSignal.set(true);
+    }
+
+    this.ledgerService.getCategoryMetadata().pipe(catchError(() => of([]))).subscribe((meta) => {
+      if (meta && meta.length > 0) {
+        this.categoryMetaSignal.set(meta);
+      }
+    });
 
     this.ledgerService.getNetWorth().pipe(catchError(() => of(null))).subscribe((nw) => {
       if (nw) {
@@ -61,10 +96,18 @@ export class LedgerStoreService {
       }
     });
 
+    this.ledgerService.getJournalEntries(50).pipe(catchError(() => of([]))).subscribe((entries) => {
+      if (entries && entries.length > 0) {
+        this.recentEntriesSignal.set(entries);
+      }
+    });
+
     this.ledgerService.getAccounts({ limit: 100 }).pipe(catchError(() => of(null))).subscribe((res) => {
-      this.isLoadingSignal.set(false);
+      if (showLoading) {
+        this.isLoadingSignal.set(false);
+      }
       if (res) {
-        this.accountsSignal.set(res.items as AccountEntity[]);
+        this.rawAccountsSignal.set(res.items as AccountEntity[]);
       }
     });
   }
@@ -99,7 +142,7 @@ export class LedgerStoreService {
           },
           ...entries,
         ]);
-        this.loadAll();
+        this.loadAll(false);
       }
     });
   }
@@ -118,7 +161,7 @@ export class LedgerStoreService {
     ).subscribe((account) => {
       if (account) {
         this.notificationService.showSuccess('Account Created', `Account ${account.name} (${account.code}) created successfully.`);
-        this.loadAll();
+        this.loadAll(false);
       }
     });
   }
@@ -162,8 +205,19 @@ export class LedgerStoreService {
             },
             ...entries,
           ]);
-          this.loadAll();
+          this.loadAll(false);
         }
       });
+  }
+
+  /**
+   * Resets all store signals to empty/initial state for clean session termination.
+   */
+  public resetStore(): void {
+    this.rawAccountsSignal.set([]);
+    this.categoryMetaSignal.set([]);
+    this.netWorthSignal.set({ totalAssets: 0, totalLiabilities: 0, netWorth: 0 });
+    this.recentEntriesSignal.set([]);
+    this.isLoadingSignal.set(false);
   }
 }

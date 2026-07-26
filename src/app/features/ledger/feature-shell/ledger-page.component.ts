@@ -63,7 +63,7 @@ import { CreateJournalEntryInput, AccountType } from '../models/ledger.model';
               </div>
             }
 
-            <app-chart-of-accounts [accountsByType]="store.accountsByType()" />
+            <app-chart-of-accounts [accountsByType]="store.accountsByType()" [categoryMeta]="store.categoryMeta()" />
           </section>
 
           <!-- Journal Entry Panel -->
@@ -79,6 +79,7 @@ import { CreateJournalEntryInput, AccountType } from '../models/ledger.model';
         <!-- Posted Journal Entries Section with Reversal Support -->
         <app-journal-entries-list
           [entries]="store.recentEntries()"
+          [accounts]="store.accounts()"
           (reverseRequested)="onReverseRequested($event)"
         />
       }
