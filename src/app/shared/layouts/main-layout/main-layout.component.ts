@@ -5,7 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ScreenService } from '../../../core/services/screen.service';
 
 /**
- * Main application shell layout including top navbar, responsive sidebar navigation, and mobile bottom bar.
+ * Main application shell layout including top navbar, responsive sidebar navigation drawer, and mobile bottom bar.
  */
 @Component({
   selector: 'app-main-layout',
@@ -31,7 +31,7 @@ import { ScreenService } from '../../../core/services/screen.service';
         <div class="header-actions">
           <app-theme-toggle />
           @if (authService.isAuthenticated()) {
-            <span class="user-badge" [class.hidden-mobile]="screenService.isMobile()">
+            <span class="user-badge hidden-mobile">
               {{ authService.currentUser()?.name || 'User' }}
             </span>
             <button type="button" class="btn-logout" (click)="onLogout()">Logout</button>
@@ -42,11 +42,23 @@ import { ScreenService } from '../../../core/services/screen.service';
       </header>
 
       <div class="app-body">
-        <!-- Sidebar Navigation (Hidden/Collapsed on Mobile) -->
+        <!-- Mobile Drawer Backdrop -->
+        @if (screenService.isMobile() && isMobileDrawerOpen()) {
+          <div
+            class="mobile-backdrop"
+            (click)="closeMobileDrawer()"
+            role="button"
+            tabindex="0"
+            (keydown.escape)="closeMobileDrawer()"
+            aria-label="Close navigation drawer"
+          ></div>
+        }
+
+        <!-- Sidebar Navigation (Desktop Collapsible / Mobile Floating Drawer) -->
         <aside
           class="app-sidebar"
-          [class.sidebar-collapsed]="isSidebarCollapsed() || screenService.isMobile()"
-          [class.hidden-mobile]="screenService.isMobile() && isSidebarCollapsed()"
+          [class.sidebar-collapsed]="!screenService.isMobile() && isSidebarCollapsed()"
+          [class.mobile-drawer-open]="screenService.isMobile() && isMobileDrawerOpen()"
         >
           <nav class="sidebar-nav">
             <a
@@ -172,9 +184,15 @@ import { ScreenService } from '../../../core/services/screen.service';
       cursor: pointer;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
+      color: var(--mat-sys-on-surface);
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
 
       &:hover {
-        background-color: rgba(0, 0, 0, 0.05);
+        background-color: rgba(103, 80, 164, 0.08);
       }
     }
 
@@ -213,6 +231,9 @@ import { ScreenService } from '../../../core/services/screen.service';
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
     }
 
     .btn-logout {
@@ -221,7 +242,7 @@ import { ScreenService } from '../../../core/services/screen.service';
       color: var(--mat-sys-on-surface);
 
       &:hover {
-        background-color: rgba(0, 0, 0, 0.05);
+        background-color: rgba(103, 80, 164, 0.08);
       }
     }
 
@@ -292,6 +313,7 @@ import { ScreenService } from '../../../core/services/screen.service';
       flex: 1;
       padding: 1.25rem;
       overflow-y: auto;
+      overflow-x: hidden;
 
       &.has-bottom-nav {
         padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
@@ -310,7 +332,7 @@ import { ScreenService } from '../../../core/services/screen.service';
       align-items: center;
       justify-content: space-around;
       padding-bottom: env(safe-area-inset-bottom, 0px);
-      z-index: 1000;
+      z-index: 900;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
     }
 
@@ -341,10 +363,69 @@ import { ScreenService } from '../../../core/services/screen.service';
       transition: transform 0.15s ease-in-out;
     }
 
-    @media (max-width: 599.98px) {
+    .mobile-backdrop {
+      display: none;
+    }
+
+    /* Responsive Mobile Breakpoint Styles (< 768px) */
+    @media (max-width: 767.98px) {
+      .app-header {
+        padding: 0 0.75rem;
+      }
+
+      .header-brand {
+        gap: 0.4rem;
+      }
+
+      .brand-title {
+        font-size: 1.05rem;
+      }
+
+      .header-actions {
+        gap: 0.4rem;
+      }
+
       .hidden-mobile {
         display: none !important;
       }
+
+      .btn-logout, .btn-login {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.8rem;
+      }
+
+      .app-sidebar {
+        position: fixed;
+        top: 64px;
+        bottom: 0;
+        left: 0;
+        width: 240px !important;
+        z-index: 1000;
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.25);
+        transform: translateX(-100%);
+        transition: transform 0.25s ease-in-out;
+
+        &.mobile-drawer-open {
+          transform: translateX(0);
+        }
+
+        .nav-label {
+          display: inline-block !important;
+        }
+      }
+
+      .mobile-backdrop {
+        display: block;
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        backdrop-filter: blur(2px);
+      }
+
       .app-content {
         padding: 0.85rem;
       }
@@ -354,15 +435,24 @@ import { ScreenService } from '../../../core/services/screen.service';
 export class MainLayoutComponent {
   protected readonly authService = inject(AuthService);
   protected readonly screenService = inject(ScreenService);
-  protected readonly isSidebarCollapsed = signal<boolean>(true);
+  protected readonly isSidebarCollapsed = signal<boolean>(false);
+  protected readonly isMobileDrawerOpen = signal<boolean>(false);
 
   protected toggleSidebar(): void {
-    this.isSidebarCollapsed.update((v) => !v);
+    if (this.screenService.isMobile()) {
+      this.isMobileDrawerOpen.update((v) => !v);
+    } else {
+      this.isSidebarCollapsed.update((v) => !v);
+    }
+  }
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
   }
 
   protected onNavItemClick(): void {
     if (this.screenService.isMobile()) {
-      this.isSidebarCollapsed.set(true);
+      this.isMobileDrawerOpen.set(false);
     }
   }
 
@@ -370,4 +460,3 @@ export class MainLayoutComponent {
     this.authService.logout();
   }
 }
-

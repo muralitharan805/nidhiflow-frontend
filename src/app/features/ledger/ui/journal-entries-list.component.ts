@@ -311,6 +311,27 @@ export interface DisplayJournalEntry {
     .pill-name {
       font-weight: 600;
     }
+
+    @media (max-width: 599.98px) {
+      .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .mode-toggle {
+        width: 100%;
+
+        mat-button-toggle-group {
+          width: 100%;
+
+          mat-button-toggle {
+            flex: 1;
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
   `]
 })
 export class JournalEntriesListComponent {

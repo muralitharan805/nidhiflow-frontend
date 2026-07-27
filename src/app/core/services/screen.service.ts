@@ -29,11 +29,14 @@ export class ScreenService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
+      const mobileQuery = '(max-width: 767.98px)';
+      const tabletQuery = '(min-width: 768px) and (max-width: 1023.98px)';
+
       this.breakpointObserver
-        .observe([Breakpoints.Handset, Breakpoints.Tablet, Breakpoints.Web])
+        .observe([Breakpoints.Handset, mobileQuery, Breakpoints.Tablet, tabletQuery, Breakpoints.Web])
         .subscribe((result) => {
-          const isHandset = result.breakpoints[Breakpoints.Handset] ?? false;
-          const isTab = result.breakpoints[Breakpoints.Tablet] ?? false;
+          const isHandset = (result.breakpoints[Breakpoints.Handset] || result.breakpoints[mobileQuery]) ?? false;
+          const isTab = !isHandset && ((result.breakpoints[Breakpoints.Tablet] || result.breakpoints[tabletQuery]) ?? false);
 
           this.isMobile.set(isHandset);
           this.isTablet.set(isTab);
