@@ -242,6 +242,28 @@ docker compose logs -f
 docker compose ps
 
 # Shutdown containers and preserve data volumes
+
+```bash
 docker compose down
 ```
 
+---
+
+## ☁️ Cloudflare Pages Deployment
+
+This project is configured for seamless deployment to **Cloudflare Pages** as a Client-Side Rendered (CSR) Single Page Application.
+
+### Commands
+
+```bash
+# Build the production bundle
+pnpm run build
+
+# Start a local Wrangler preview server
+pnpm run deploy:preview
+
+# Deploy directly to Cloudflare Pages
+pnpm run deploy:prod
+```
+
+> **Note:** The `public/_redirects` file (`/* /index.html 200`) ensures that deep links (like `/dashboard`) are routed correctly to the Angular router without returning 404 errors.
