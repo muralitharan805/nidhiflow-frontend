@@ -8,8 +8,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "deploy:preview": "npx wrangler pages dev dist/nidhiFlow-frontend/browser",
-    "deploy:prod": "npx wrangler pages deploy dist/nidhiFlow-frontend/browser --project-name=nidhiflow-frontend"
+    "preview": "pnpm run build && wrangler pages dev dist/nidhiFlow-frontend/browser",
+    "deploy": "pnpm run build && wrangler pages deploy dist/nidhiFlow-frontend/browser --project-name=nidhiflow-frontend"
   },
   "private": true,
   "packageManager": "pnpm@11.1.3",
@@ -37,12 +37,5 @@
     "typescript": "~5.9.2",
     "vitest": "^4.0.8",
     "wrangler": "^4.116.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "workerd",
-      "@angular/build",
-      "esbuild"
-    ]
   }
 }
