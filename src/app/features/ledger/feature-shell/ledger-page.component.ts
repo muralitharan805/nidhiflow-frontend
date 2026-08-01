@@ -215,6 +215,49 @@ import { CreateJournalEntryInput, AccountType } from '../models/ledger.model';
         background: var(--mat-sys-primary-container);
       }
     }
+
+    @media (max-width: 599.98px) {
+      .ledger-page {
+        gap: 1rem;
+      }
+      .page-title {
+        font-size: 1.15rem;
+      }
+      .page-subtitle {
+        font-size: 0.75rem;
+      }
+      .net-worth-banner {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        gap: 0.4rem;
+        justify-content: space-around;
+      }
+      .nw-label {
+        font-size: 0.625rem;
+      }
+      .nw-value {
+        font-size: 0.9rem;
+      }
+      .nw-divider {
+        font-size: 0.9rem;
+      }
+      .panel {
+        padding: 0.75rem;
+        border-radius: 10px;
+      }
+      .panel-header-row {
+        gap: 0.35rem;
+        margin-bottom: 0.75rem;
+      }
+      .panel-title {
+        font-size: 0.9rem;
+      }
+      .btn-outline {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.725rem;
+        white-space: nowrap;
+      }
+    }
   `]
 })
 export class LedgerPageComponent implements OnInit {

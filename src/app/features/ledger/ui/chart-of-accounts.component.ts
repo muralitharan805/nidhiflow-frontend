@@ -247,6 +247,49 @@ const DEFAULT_ACCOUNT_TYPE_META: Record<AccountType, { label: string; icon: stri
       margin: 0;
       font-style: italic;
     }
+
+    @media (max-width: 599.98px) {
+      .type-header {
+        padding: 0.65rem 0.75rem;
+      }
+      .type-subtext {
+        display: none;
+      }
+      .header-meta {
+        gap: 0.4rem;
+        flex-shrink: 0;
+      }
+      .category-total {
+        font-size: 0.825rem;
+      }
+      .account-count {
+        font-size: 0.675rem;
+        padding: 0.15rem 0.45rem;
+      }
+      .account-item {
+        padding: 0.55rem 0.65rem;
+        gap: 0.4rem;
+      }
+      .account-code {
+        min-width: 34px;
+        font-size: 0.675rem;
+        flex-shrink: 0;
+      }
+      .account-name {
+        font-size: 0.8rem;
+        line-height: 1.25;
+      }
+      .account-desc {
+        font-size: 0.65rem;
+      }
+      .account-balance {
+        font-size: 0.75rem;
+        padding: 0.15rem 0.35rem;
+        margin-left: auto;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+    }
   `]
 })
 export class ChartOfAccountsComponent {

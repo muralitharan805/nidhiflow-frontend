@@ -21,3 +21,23 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
+
+/* Touch Target Ergonomics & Mobile Safe Inset Utilities */
+button,
+a.mat-mdc-button-base,
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@mixin mobile-safe-areas {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.mobile-safe-bottom {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
