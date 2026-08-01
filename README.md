@@ -253,17 +253,22 @@ docker compose down
 
 This project is configured for seamless deployment to **Cloudflare Pages** as a Client-Side Rendered (CSR) Single Page Application.
 
+### Prerequisites
+
+- **Cloudflare Dashboard**: Set the `NODE_VERSION` environment variable (e.g., `20`) in the Cloudflare Pages settings so the Angular CLI runs in the correct environment during CI builds.
+- **Local Dev**: Use a `.dev.vars` file for local Wrangler secrets (this is auto-ignored by Git).
+
 ### Commands
 
 ```bash
-# Build the production bundle
+# Build production bundle
 pnpm run build
 
-# Start a local Wrangler preview server
-pnpm run deploy:preview
+# Preview SPA locally on Cloudflare Pages dev server
+pnpm run preview
 
-# Deploy directly to Cloudflare Pages
-pnpm run deploy:prod
+# Deploy SPA bundle directly to Cloudflare Pages
+pnpm run deploy
 ```
 
 > **Note:** The `public/_redirects` file (`/* /index.html 200`) ensures that deep links (like `/dashboard`) are routed correctly to the Angular router without returning 404 errors.

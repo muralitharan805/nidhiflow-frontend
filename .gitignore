@@ -45,3 +45,4 @@ Thumbs.db
 
 # Cloudflare Pages
 .wrangler/
+.dev.vars
