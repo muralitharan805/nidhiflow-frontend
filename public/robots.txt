@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nidhiflow.seyalicraft.com/sitemap.xml
