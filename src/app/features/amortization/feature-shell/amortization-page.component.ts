@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,6 +17,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
 @Component({
   selector: 'app-amortization-page',
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     FormsModule,
     CurrencyPipe,
@@ -43,49 +44,87 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
         <section class="panel">
           <h3 class="panel-title">🏠 Register New Loan</h3>
 
-          <form class="loan-form" [formGroup]="loanForm" (ngSubmit)="onCreateLoan()">
-            
-            <mat-form-field appearance="outline">
-              <mat-label>Liability Account</mat-label>
-              <mat-select formControlName="accountId">
-                @for (acc of liabilityAccounts(); track acc.id) {
-                  <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Principal Amount (₹)</mat-label>
-              <input matInput type="number" formControlName="principalAmount" placeholder="2500000" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Annual Interest Rate (%)</mat-label>
-              <input matInput type="number" formControlName="annualInterestRate" placeholder="8.5" step="0.1" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Tenure (Months)</mat-label>
-              <input matInput type="number" formControlName="tenureMonths" placeholder="240" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Loan Start Date</mat-label>
-              <input matInput type="date" formControlName="startDate" />
-            </mat-form-field>
-
-            <!-- Live EMI Preview -->
-            @if (previewEmi() > 0) {
-              <div class="emi-preview">
-                <span>Monthly EMI Preview:</span>
-                <strong>{{ previewEmi() | currency:'INR':'symbol':'1.0-0' }}</strong>
+          @if (liabilityAccounts().length === 0) {
+            <div class="empty-account-warning">
+              <div class="warning-header">
+                <span class="warning-icon">⚠️</span>
+                <strong>No Loan / Liability Account Found</strong>
               </div>
-            }
+              <p class="warning-text">
+                To register an EMI schedule, you need a <strong>Liability Account Head</strong> (e.g. Home Loan, Car Loan, Personal Loan) in your Chart of Accounts.
+              </p>
 
-            <button mat-flat-button color="primary" type="submit" [disabled]="loanForm.invalid || isLoading()">
-              {{ isLoading() ? 'Calculating...' : 'Generate Amortization Schedule' }}
-            </button>
-          </form>
+              @if (!showQuickAddForm()) {
+                <button mat-flat-button color="primary" type="button" (click)="showQuickAddForm.set(true)">
+                  + Quick Add Loan Account Head
+                </button>
+              } @else {
+                <div class="quick-add-box">
+                  <h4 class="quick-add-title">Create Loan Account Head</h4>
+                  <div class="quick-add-inputs">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>Account Name</mat-label>
+                      <input matInput [(ngModel)]="quickAccountName" placeholder="e.g. SBI Home Loan" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>Account Code</mat-label>
+                      <input matInput [(ngModel)]="quickAccountCode" placeholder="2010" />
+                    </mat-form-field>
+                  </div>
+                  <div class="quick-add-actions">
+                    <button mat-flat-button color="primary" type="button" [disabled]="!quickAccountName()" (click)="onQuickCreateLiabilityAccount()">
+                      Save & Select Account
+                    </button>
+                    <button mat-button type="button" (click)="showQuickAddForm.set(false)">Cancel</button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <form class="loan-form" [formGroup]="loanForm" (ngSubmit)="onCreateLoan()">
+              
+              <mat-form-field appearance="outline">
+                <mat-label>Liability Account</mat-label>
+                <mat-select formControlName="accountId">
+                  @for (acc of liabilityAccounts(); track acc.id) {
+                    <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Principal Amount (₹)</mat-label>
+                <input matInput type="number" formControlName="principalAmount" placeholder="2500000" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Annual Interest Rate (%)</mat-label>
+                <input matInput type="number" formControlName="annualInterestRate" placeholder="8.5" step="0.1" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Tenure (Months)</mat-label>
+                <input matInput type="number" formControlName="tenureMonths" placeholder="240" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Loan Start Date</mat-label>
+                <input matInput type="date" formControlName="startDate" />
+              </mat-form-field>
+
+              <!-- Live EMI Preview -->
+              @if (previewEmi() > 0) {
+                <div class="emi-preview">
+                  <span>Monthly EMI Preview:</span>
+                  <strong>{{ previewEmi() | currency:'INR':'symbol':'1.0-0' }}</strong>
+                </div>
+              }
+
+              <button mat-flat-button color="primary" type="submit" [disabled]="loanForm.invalid || isLoading()">
+                {{ isLoading() ? 'Calculating...' : 'Generate Amortization Schedule' }}
+              </button>
+            </form>
+          }
         </section>
 
         <!-- EMI Countdown Card -->
@@ -102,15 +141,15 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
               <div class="countdown-row">
                 <div class="countdown-metric">
                   <span class="cm-label">Principal</span>
-                  <span class="cm-value">{{ activeLoan()!.principalAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+                  <span class="cm-value">{{ loanPrincipal() | currency:'INR':'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="countdown-metric">
                   <span class="cm-label">Rate</span>
-                  <span class="cm-value">{{ activeLoan()!.annualInterestRate }}%</span>
+                  <span class="cm-value">{{ loanRate() }}%</span>
                 </div>
                 <div class="countdown-metric">
                   <span class="cm-label">Tenure</span>
-                  <span class="cm-value">{{ activeLoan()!.tenureMonths }} mo</span>
+                  <span class="cm-value">{{ loanTenure() }} mo</span>
                 </div>
               </div>
 
@@ -118,7 +157,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
                 <div class="payoff-dates">
                   <div>
                     <span class="pd-label">Start Date</span>
-                    <span class="pd-value">{{ activeLoan()!.startDate | date:'mediumDate' }}</span>
+                    <span class="pd-value">{{ loanStartDate() | date:'mediumDate' }}</span>
                   </div>
                   <div class="pd-arrow">→</div>
                   <div>
@@ -132,7 +171,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
               <div class="progress-section">
                 <div class="progress-labels">
                   <span>Repayment Progress</span>
-                  <span>{{ completedMonths() }} / {{ activeLoan()!.tenureMonths }} months</span>
+                  <span>{{ completedMonths() }} / {{ loanTenure() }} months</span>
                 </div>
                 <div class="progress-track" role="progressbar" [attr.aria-valuenow]="completionPercent()" aria-valuemin="0" aria-valuemax="100">
                   <div class="progress-fill" [style.width.%]="completionPercent()"></div>
@@ -208,7 +247,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
                     <!-- Balance Column -->
                     <ng-container matColumnDef="balance">
                       <th mat-header-cell *matHeaderCellDef class="text-right"> Balance </th>
-                      <td mat-cell *matCellDef="let row" class="text-right"> {{ row.closingBalance | currency:'INR':'symbol':'1.0-0' }} </td>
+                      <td mat-cell *matCellDef="let row" class="text-right"> {{ (row.closingBalance ?? row.remainingPrincipal) | currency:'INR':'symbol':'1.0-0' }} </td>
                     </ng-container>
 
                     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -250,6 +289,30 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
     .panel-title { font-size: 1rem; font-weight: 700; margin: 0 0 1rem; }
 
     .loan-form { display: flex; flex-direction: column; gap: 0; }
+
+    .empty-account-warning {
+      background: var(--mat-sys-surface-container-low);
+      border: 1px dashed var(--mat-sys-outline);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .warning-header { display: flex; align-items: center; gap: 0.5rem; color: var(--mat-sys-error); }
+    .warning-text { font-size: 0.85rem; margin: 0; color: var(--mat-sys-on-surface-variant); }
+    
+    .quick-add-box {
+      background: var(--mat-sys-surface-container-lowest);
+      border: 1px solid var(--mat-sys-primary);
+      border-radius: 8px;
+      padding: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .quick-add-title { font-size: 0.875rem; font-weight: 700; margin: 0 0 0.75rem; }
+    .quick-add-inputs { display: flex; flex-direction: column; gap: 0.5rem; }
+    .quick-add-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .w-full { width: 100%; }
 
     .emi-preview {
       display: flex;
@@ -341,11 +404,15 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
     }
   `]
 })
-export class AmortizationPageComponent {
+export class AmortizationPageComponent implements OnInit {
   private readonly amortizationService = inject(AmortizationService);
   private readonly ledgerStore = inject(LedgerStoreService);
   private readonly notificationService = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
+
+  public ngOnInit(): void {
+    this.ledgerStore.loadAll();
+  }
 
   protected readonly isLoading = signal<boolean>(false);
   protected readonly activeLoan = signal<LoanAmortizationDetails | null>(null);
@@ -356,19 +423,44 @@ export class AmortizationPageComponent {
     this.ledgerStore.accounts().filter((a) => a.type === 'LIABILITY')
   );
 
-  protected readonly completedMonths = computed(() => {
+  protected readonly loanPrincipal = computed(() => {
     const loan = this.activeLoan();
     if (!loan) return 0;
-    const start = new Date(loan.startDate);
+    return loan.principalAmount ?? loan.loan?.principalAmount ?? 0;
+  });
+
+  protected readonly loanRate = computed(() => {
+    const loan = this.activeLoan();
+    if (!loan) return 0;
+    return loan.annualInterestRate ?? loan.loan?.annualInterestRate ?? 0;
+  });
+
+  protected readonly loanTenure = computed(() => {
+    const loan = this.activeLoan();
+    if (!loan) return 0;
+    return loan.tenureMonths ?? loan.loan?.tenureMonths ?? 0;
+  });
+
+  protected readonly loanStartDate = computed(() => {
+    const loan = this.activeLoan();
+    if (!loan) return '';
+    return loan.startDate ?? loan.loan?.startDate ?? '';
+  });
+
+  protected readonly completedMonths = computed(() => {
+    const startStr = this.loanStartDate();
+    const tenure = this.loanTenure();
+    if (!startStr || !tenure) return 0;
+    const start = new Date(startStr);
     const now = new Date();
     const diff = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-    return Math.min(Math.max(0, diff), loan.tenureMonths);
+    return Math.min(Math.max(0, diff), tenure);
   });
 
   protected readonly completionPercent = computed(() => {
-    const loan = this.activeLoan();
-    if (!loan) return 0;
-    return (this.completedMonths() / loan.tenureMonths) * 100;
+    const tenure = this.loanTenure();
+    if (!tenure) return 0;
+    return (this.completedMonths() / tenure) * 100;
   });
 
   protected readonly previewEmi = computed(() => {
@@ -385,43 +477,72 @@ export class AmortizationPageComponent {
     principalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
     annualInterestRate: [null as number | null, [Validators.required, Validators.min(0.1), Validators.max(50)]],
     tenureMonths: [null as number | null, [Validators.required, Validators.min(1), Validators.max(360)]],
-    startDate: ['', Validators.required],
+    startDate: [''],
   });
 
   protected readonly prepaymentAmount = signal<number>(0);
 
   protected readonly estimatedInterestSaved = computed(() => {
     const extra = this.prepaymentAmount();
-    const loan = this.activeLoan();
-    if (!extra || !loan) return 0;
-    const r = loan.annualInterestRate / 100 / 12;
-    // Estimated interest saved approximation based on compound duration reduction
-    return Math.round(extra * r * (loan.tenureMonths / 2));
+    const rate = this.loanRate();
+    const tenure = this.loanTenure();
+    if (!extra || !rate || !tenure) return 0;
+    const r = rate / 100 / 12;
+    return Math.round(extra * r * (tenure / 2));
   });
 
   protected readonly estimatedMonthsSaved = computed(() => {
     const extra = this.prepaymentAmount();
     const loan = this.activeLoan();
-    if (!extra || !loan || loan.monthlyEmi === 0) return 0;
-    return Math.min(loan.tenureMonths, Math.round(extra / loan.monthlyEmi));
+    const tenure = this.loanTenure();
+    if (!extra || !loan || !loan.monthlyEmi || !tenure) return 0;
+    return Math.min(tenure, Math.round(extra / loan.monthlyEmi));
   });
 
+  protected readonly showQuickAddForm = signal<boolean>(false);
+  protected readonly quickAccountName = signal<string>('Home Loan Liability');
+  protected readonly quickAccountCode = signal<string>('2010');
+
+  protected onQuickCreateLiabilityAccount(): void {
+    const name = this.quickAccountName().trim();
+    const code = this.quickAccountCode().trim() || `20${Math.floor(Math.random() * 90 + 10)}`;
+    if (!name) return;
+
+    this.ledgerStore.createAccount({
+      code,
+      name,
+      type: 'LIABILITY',
+      description: 'EMI Loan Liability Account',
+    });
+
+    this.showQuickAddForm.set(false);
+  }
+
   protected onCreateLoan(): void {
-    if (this.loanForm.invalid) return;
+    if (this.loanForm.invalid) {
+      // If only startDate is missing, set default today date
+      if (this.loanForm.get('accountId')?.valid && this.loanForm.get('principalAmount')?.valid && this.loanForm.get('annualInterestRate')?.valid && this.loanForm.get('tenureMonths')?.valid) {
+        this.loanForm.patchValue({ startDate: new Date().toISOString().split('T')[0] });
+      } else {
+        return;
+      }
+    }
     this.isLoading.set(true);
 
     const raw = this.loanForm.getRawValue();
+    const startDateVal = raw.startDate || new Date().toISOString().split('T')[0];
     this.amortizationService.createLoan({
       accountId: raw.accountId!,
-      principalAmount: raw.principalAmount!,
-      annualInterestRate: raw.annualInterestRate!,
-      tenureMonths: raw.tenureMonths!,
-      startDate: raw.startDate!,
+      principalAmount: Number(raw.principalAmount),
+      annualInterestRate: Number(raw.annualInterestRate),
+      tenureMonths: Number(raw.tenureMonths),
+      startDate: startDateVal,
     }).subscribe({
-      next: (loan) => {
+      next: (res: any) => {
         this.isLoading.set(false);
-        this.activeLoan.set(loan);
-        this.notificationService.showSuccess('Loan Created', `Monthly EMI: ₹${Math.round(loan.monthlyEmi).toLocaleString('en-IN')}`);
+        const payload: LoanAmortizationDetails = res.data || res;
+        this.activeLoan.set(payload);
+        this.notificationService.showSuccess('Loan Created', `Monthly EMI: ₹${Math.round(payload.monthlyEmi).toLocaleString('en-IN')}`);
       },
       error: () => {
         this.isLoading.set(false);
@@ -435,20 +556,22 @@ export class AmortizationPageComponent {
     if (!loan || loan.schedule.length === 0) return;
     const firstRow = loan.schedule[0];
 
-    // Find accounts for EMI double-entry: Liability Loan Account, Asset Bank Account, Interest Expense Account
+    const accountId = loan.accountId || loan.loan?.accountId;
+    const loanId = loan.id || loan.loan?.id || 'loan';
+
     const assetAcc = this.ledgerStore.accounts().find((a) => a.type === 'ASSET');
     const interestExpenseAcc = this.ledgerStore.accounts().find((a) => a.type === 'EXPENSE');
 
-    if (!assetAcc || !interestExpenseAcc) {
-      this.notificationService.showError('Posting Failed', 'Need at least 1 ASSET account and 1 EXPENSE account in Chart of Accounts.');
+    if (!accountId || !assetAcc || !interestExpenseAcc) {
+      this.notificationService.showError('Posting Failed', 'Need at least 1 ASSET account, 1 EXPENSE account, and valid loan account.');
       return;
     }
 
     this.ledgerStore.postJournalEntry({
-      entryNumber: `EMI-${loan.id.slice(0, 6)}-M1`,
-      description: `Monthly EMI Payment - Loan #${loan.id.slice(0, 6)}`,
+      entryNumber: `EMI-${loanId.slice(0, 6)}-M1`,
+      description: `Monthly EMI Payment - Loan #${loanId.slice(0, 6)}`,
       postings: [
-        { accountId: loan.accountId, type: 'DEBIT', amount: firstRow.principalComponent },
+        { accountId, type: 'DEBIT', amount: firstRow.principalComponent },
         { accountId: interestExpenseAcc.id, type: 'DEBIT', amount: firstRow.interestComponent },
         { accountId: assetAcc.id, type: 'CREDIT', amount: firstRow.emi },
       ],

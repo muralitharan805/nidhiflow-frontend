@@ -2,7 +2,7 @@ import {
   Component, ChangeDetectionStrategy, inject, signal,
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormArray, Validators } from '@angular/forms';
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +17,7 @@ import { SimulationResult, CategoryInflationInput } from '../models/forecasting.
  */
 @Component({
   selector: 'app-forecasting-page',
-  imports: [ReactiveFormsModule, CurrencyPipe, MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="forecasting-page">
@@ -413,10 +413,10 @@ export class ForecastingPageComponent {
 
     this.forecastingService.simulateScenario({
       scenarioName: raw.scenarioName!,
-      initialAnnualIncome: raw.initialAnnualIncome!,
-      incomeGrowthRate: (raw.incomeGrowthRate ?? 0) / 100,
-      projectionYears: raw.projectionYears ?? 5,
-      annualEmiObligation: raw.annualEmiObligation ?? undefined,
+      initialAnnualIncome: Number(raw.initialAnnualIncome),
+      incomeGrowthRate: Number(raw.incomeGrowthRate ?? 0) / 100,
+      projectionYears: Number(raw.projectionYears ?? 5),
+      annualEmiObligation: raw.annualEmiObligation ? Number(raw.annualEmiObligation) : undefined,
       categoryInflations,
     }).subscribe({
       next: (result) => {
