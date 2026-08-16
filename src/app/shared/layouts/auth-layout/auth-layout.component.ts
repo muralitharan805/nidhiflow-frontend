@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 
 /**
  * Centered layout shell for authentication and login/signup screens.
  */
 @Component({
   selector: 'app-auth-layout',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="auth-layout-container">
@@ -28,6 +28,10 @@ import { RouterOutlet } from '@angular/router';
             <span class="badge">EMI Amortization</span>
             <span class="badge">Real-time Ledgers</span>
             <span class="badge">Audit Trail</span>
+          </div>
+          <div class="auth-legal-links">
+            <a routerLink="/privacy">Privacy Policy</a> &bull;
+            <a routerLink="/terms">Terms of Service</a>
           </div>
         </footer>
       </div>
@@ -116,6 +120,22 @@ import { RouterOutlet } from '@angular/router';
       color: #cbd5e1;
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-weight: 500;
+    }
+
+    .auth-legal-links {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: #64748b;
+
+      a {
+        color: #94a3b8;
+        text-decoration: none;
+        transition: color 0.15s ease-in-out;
+
+        &:hover {
+          color: #60a5fa;
+        }
+      }
     }
   `]
 })
