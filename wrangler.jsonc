@@ -2,5 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nidhiflow-frontend",
   "pages_build_output_dir": "dist/nidhiFlow-frontend/browser",
-  "compatibility_date": "2026-07-26"
+  "compatibility_date": "2026-07-26",
+  "build": {
+    "command": "pnpm run build"
+  }
 }
