@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
+import { FooterComponent } from '../../components/footer/footer.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { ScreenService } from '../../../core/services/screen.service';
 
@@ -9,7 +10,7 @@ import { ScreenService } from '../../../core/services/screen.service';
  */
 @Component({
   selector: 'app-main-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ThemeToggleComponent, FooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="app-layout-container">
@@ -122,6 +123,7 @@ import { ScreenService } from '../../../core/services/screen.service';
         <!-- Main Viewport Content -->
         <main class="app-content" [class.has-bottom-nav]="screenService.isMobile()">
           <router-outlet />
+          <app-footer />
         </main>
       </div>
 
