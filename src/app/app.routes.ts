@@ -45,6 +45,18 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES),
       },
+      {
+        path: 'privacy',
+        title: 'Privacy Policy — nidhiFlow Finance Engine',
+        loadComponent: () =>
+          import('./pages/legal/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
+      },
+      {
+        path: 'terms',
+        title: 'Terms of Service — nidhiFlow Finance Engine',
+        loadComponent: () =>
+          import('./pages/legal/terms-of-service.component').then((m) => m.TermsOfServiceComponent),
+      },
     ],
   },
   {
