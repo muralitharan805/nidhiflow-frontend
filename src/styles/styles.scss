@@ -26,3 +26,35 @@ html, body {
 *, *:before, *:after {
   box-sizing: inherit;
 }
+
+/* Mobile Responsive Utility Rules (<600px) */
+@media (max-width: 600px) {
+  .mat-mdc-form-field {
+    width: 100% !important;
+  }
+
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  .mobile-touch-target {
+    min-height: 48px !important;
+  }
+
+  .responsive-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .mobile-card-row {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background-color: var(--mat-sys-surface-container);
+    border: 1px solid var(--mat-sys-outline-variant);
+  }
+}
+
