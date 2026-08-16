@@ -545,7 +545,7 @@ export class JournalEntryFormComponent {
    */
   protected getSecondaryAccountLabel(): string {
     switch (this.simpleTxType()) {
-      case 'OPENING_BALANCE': return 'Opening Capital / Owner Equity Head';
+      case 'OPENING_BALANCE': return 'Starting Capital / Personal Savings Head';
       case 'EXPENSE': return 'Expense Category';
       case 'INCOME': return 'Income Source Category';
       case 'TRANSFER': return 'To Account (Destination)';
@@ -573,7 +573,7 @@ export class JournalEntryFormComponent {
    */
   protected getSecondaryAccountHint(): string {
     switch (this.simpleTxType()) {
-      case 'OPENING_BALANCE': return "Select 'Opening Balance Equity' (your own starting savings).";
+      case 'OPENING_BALANCE': return "Select 'Opening Balance Equity' (represents your initial personal savings deposit).";
       case 'EXPENSE': return 'Select the spend category (e.g. Groceries, House Rent, Utilities).';
       case 'INCOME': return 'Select the income category (e.g. Monthly Salary, Freelance, Dividend).';
       case 'TRANSFER': return 'Select the destination account receiving the money.';

@@ -37,7 +37,7 @@ import { MatButtonModule } from '@angular/material/button';
           <div class="metric-label">Net Worth</div>
           <div class="metric-value">{{ store.metrics().netWorth | currency:'INR':'symbol':'1.0-0' }}</div>
           <div class="metric-footer">
-            <span class="ratio-tag">A/L Ratio: {{ store.assetToLiabilityRatio() }}x</span>
+            <span class="ratio-tag">A/L Ratio: {{ store.assetToLiabilityRatioText() }}</span>
           </div>
         </div>
 
