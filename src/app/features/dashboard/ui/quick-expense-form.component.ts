@@ -110,6 +110,21 @@ import { AccountEntity } from '../../ledger/models/ledger.model';
       min-width: 200px;
     }
 
+    @media (max-width: 600px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .flex-1, .flex-2, mat-form-field {
+        width: 100% !important;
+        min-width: 100% !important;
+      }
+      button[mat-flat-button] {
+        width: 100% !important;
+        min-height: 48px;
+      }
+    }
+
     .select-search-box {
       display: flex;
       align-items: center;

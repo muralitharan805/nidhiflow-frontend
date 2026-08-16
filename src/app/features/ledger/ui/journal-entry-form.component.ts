@@ -375,6 +375,25 @@ export type SimpleTransactionType = 'OPENING_BALANCE' | 'EXPENSE' | 'INCOME' | '
       width: 160px;
     }
 
+    @media (max-width: 600px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .flex-1, .amount-field, mat-form-field {
+        width: 100% !important;
+        min-width: 100% !important;
+      }
+      .pill-group {
+        width: 100%;
+        .type-pill {
+          flex: 1;
+          text-align: center;
+          padding: 0.6rem 0.5rem;
+        }
+      }
+    }
+
     .auto-posting-card {
       background: rgba(var(--mat-sys-primary-rgb, 25, 118, 210), 0.06);
       border: 1px solid var(--mat-sys-primary);

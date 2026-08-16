@@ -402,6 +402,25 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
       color: var(--mat-sys-outline);
       font-size: 0.9rem;
     }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+      }
+      .countdown-row, .payoff-dates {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+      mat-form-field, .w-full {
+        width: 100% !important;
+      }
+      button[mat-flat-button], button[mat-stroked-button] {
+        width: 100% !important;
+        min-height: 48px;
+      }
+    }
   `]
 })
 export class AmortizationPageComponent implements OnInit {

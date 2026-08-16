@@ -191,6 +191,23 @@ import { BankReconciliationComponent } from '../ui/bank-reconciliation.component
     .tab-content {
       padding-top: 1.25rem;
     }
+
+    @media (max-width: 600px) {
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 1rem;
+      }
+      .preset-field, .date-field, mat-form-field {
+        width: 100% !important;
+      }
+      .apply-btn {
+        width: 100% !important;
+        margin-bottom: 0;
+        min-height: 48px;
+      }
+    }
   `]
 })
 export class ReportsPageComponent implements OnInit {
