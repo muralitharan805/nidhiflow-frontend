@@ -14,11 +14,12 @@ export interface CreateLoanInput {
  */
 export interface AmortizationScheduleItem {
   month: number;
-  openingBalance: number;
+  openingBalance?: number;
   emi: number;
   principalComponent: number;
   interestComponent: number;
-  closingBalance: number;
+  closingBalance?: number;
+  remainingPrincipal?: number;
   paymentDate: string;
 }
 
@@ -26,16 +27,27 @@ export interface AmortizationScheduleItem {
  * Full loan amortization response from backend.
  */
 export interface LoanAmortizationDetails {
-  id: string;
-  accountId: string;
-  principalAmount: number;
-  annualInterestRate: number;
-  tenureMonths: number;
+  id?: string;
+  accountId?: string;
+  principalAmount?: number;
+  annualInterestRate?: number;
+  tenureMonths?: number;
   monthlyEmi: number;
-  startDate: string;
+  startDate?: string;
   payoffDate: string;
   totalInterestPayable: number;
+  totalAmountPayable?: number;
   schedule: AmortizationScheduleItem[];
+  loan?: {
+    id: string;
+    accountId: string;
+    principalAmount: number;
+    annualInterestRate: number;
+    tenureMonths: number;
+    monthlyEmi: number;
+    startDate: string;
+    payoffDate: string;
+  };
 }
 
 /**
@@ -46,7 +58,7 @@ export interface PrepaymentSimulationResult {
   newPayoffDate: string;
   monthsSaved: number;
   interestSaved: number;
-  newRemainingSchedule: AmortizationScheduleItem[];
+  updatedSchedule: AmortizationScheduleItem[];
 }
 
 /**

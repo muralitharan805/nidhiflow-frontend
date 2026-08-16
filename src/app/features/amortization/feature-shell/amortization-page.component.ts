@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
-import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,6 +17,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
 @Component({
   selector: 'app-amortization-page',
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     FormsModule,
     CurrencyPipe,
@@ -140,15 +141,15 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
               <div class="countdown-row">
                 <div class="countdown-metric">
                   <span class="cm-label">Principal</span>
-                  <span class="cm-value">{{ activeLoan()!.principalAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+                  <span class="cm-value">{{ loanPrincipal() | currency:'INR':'symbol':'1.0-0' }}</span>
                 </div>
                 <div class="countdown-metric">
                   <span class="cm-label">Rate</span>
-                  <span class="cm-value">{{ activeLoan()!.annualInterestRate }}%</span>
+                  <span class="cm-value">{{ loanRate() }}%</span>
                 </div>
                 <div class="countdown-metric">
                   <span class="cm-label">Tenure</span>
-                  <span class="cm-value">{{ activeLoan()!.tenureMonths }} mo</span>
+                  <span class="cm-value">{{ loanTenure() }} mo</span>
                 </div>
               </div>
 
@@ -156,7 +157,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
                 <div class="payoff-dates">
                   <div>
                     <span class="pd-label">Start Date</span>
-                    <span class="pd-value">{{ activeLoan()!.startDate | date:'mediumDate' }}</span>
+                    <span class="pd-value">{{ loanStartDate() | date:'mediumDate' }}</span>
                   </div>
                   <div class="pd-arrow">→</div>
                   <div>
@@ -170,7 +171,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
               <div class="progress-section">
                 <div class="progress-labels">
                   <span>Repayment Progress</span>
-                  <span>{{ completedMonths() }} / {{ activeLoan()!.tenureMonths }} months</span>
+                  <span>{{ completedMonths() }} / {{ loanTenure() }} months</span>
                 </div>
                 <div class="progress-track" role="progressbar" [attr.aria-valuenow]="completionPercent()" aria-valuemin="0" aria-valuemax="100">
                   <div class="progress-fill" [style.width.%]="completionPercent()"></div>
@@ -246,7 +247,7 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
                     <!-- Balance Column -->
                     <ng-container matColumnDef="balance">
                       <th mat-header-cell *matHeaderCellDef class="text-right"> Balance </th>
-                      <td mat-cell *matCellDef="let row" class="text-right"> {{ row.closingBalance | currency:'INR':'symbol':'1.0-0' }} </td>
+                      <td mat-cell *matCellDef="let row" class="text-right"> {{ (row.closingBalance ?? row.remainingPrincipal) | currency:'INR':'symbol':'1.0-0' }} </td>
                     </ng-container>
 
                     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -403,11 +404,15 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
     }
   `]
 })
-export class AmortizationPageComponent {
+export class AmortizationPageComponent implements OnInit {
   private readonly amortizationService = inject(AmortizationService);
   private readonly ledgerStore = inject(LedgerStoreService);
   private readonly notificationService = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
+
+  public ngOnInit(): void {
+    this.ledgerStore.loadAll();
+  }
 
   protected readonly isLoading = signal<boolean>(false);
   protected readonly activeLoan = signal<LoanAmortizationDetails | null>(null);
@@ -418,19 +423,44 @@ export class AmortizationPageComponent {
     this.ledgerStore.accounts().filter((a) => a.type === 'LIABILITY')
   );
 
-  protected readonly completedMonths = computed(() => {
+  protected readonly loanPrincipal = computed(() => {
     const loan = this.activeLoan();
     if (!loan) return 0;
-    const start = new Date(loan.startDate);
+    return loan.principalAmount ?? loan.loan?.principalAmount ?? 0;
+  });
+
+  protected readonly loanRate = computed(() => {
+    const loan = this.activeLoan();
+    if (!loan) return 0;
+    return loan.annualInterestRate ?? loan.loan?.annualInterestRate ?? 0;
+  });
+
+  protected readonly loanTenure = computed(() => {
+    const loan = this.activeLoan();
+    if (!loan) return 0;
+    return loan.tenureMonths ?? loan.loan?.tenureMonths ?? 0;
+  });
+
+  protected readonly loanStartDate = computed(() => {
+    const loan = this.activeLoan();
+    if (!loan) return '';
+    return loan.startDate ?? loan.loan?.startDate ?? '';
+  });
+
+  protected readonly completedMonths = computed(() => {
+    const startStr = this.loanStartDate();
+    const tenure = this.loanTenure();
+    if (!startStr || !tenure) return 0;
+    const start = new Date(startStr);
     const now = new Date();
     const diff = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-    return Math.min(Math.max(0, diff), loan.tenureMonths);
+    return Math.min(Math.max(0, diff), tenure);
   });
 
   protected readonly completionPercent = computed(() => {
-    const loan = this.activeLoan();
-    if (!loan) return 0;
-    return (this.completedMonths() / loan.tenureMonths) * 100;
+    const tenure = this.loanTenure();
+    if (!tenure) return 0;
+    return (this.completedMonths() / tenure) * 100;
   });
 
   protected readonly previewEmi = computed(() => {
@@ -447,25 +477,26 @@ export class AmortizationPageComponent {
     principalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
     annualInterestRate: [null as number | null, [Validators.required, Validators.min(0.1), Validators.max(50)]],
     tenureMonths: [null as number | null, [Validators.required, Validators.min(1), Validators.max(360)]],
-    startDate: ['', Validators.required],
+    startDate: [''],
   });
 
   protected readonly prepaymentAmount = signal<number>(0);
 
   protected readonly estimatedInterestSaved = computed(() => {
     const extra = this.prepaymentAmount();
-    const loan = this.activeLoan();
-    if (!extra || !loan) return 0;
-    const r = loan.annualInterestRate / 100 / 12;
-    // Estimated interest saved approximation based on compound duration reduction
-    return Math.round(extra * r * (loan.tenureMonths / 2));
+    const rate = this.loanRate();
+    const tenure = this.loanTenure();
+    if (!extra || !rate || !tenure) return 0;
+    const r = rate / 100 / 12;
+    return Math.round(extra * r * (tenure / 2));
   });
 
   protected readonly estimatedMonthsSaved = computed(() => {
     const extra = this.prepaymentAmount();
     const loan = this.activeLoan();
-    if (!extra || !loan || loan.monthlyEmi === 0) return 0;
-    return Math.min(loan.tenureMonths, Math.round(extra / loan.monthlyEmi));
+    const tenure = this.loanTenure();
+    if (!extra || !loan || !loan.monthlyEmi || !tenure) return 0;
+    return Math.min(tenure, Math.round(extra / loan.monthlyEmi));
   });
 
   protected readonly showQuickAddForm = signal<boolean>(false);
@@ -488,21 +519,30 @@ export class AmortizationPageComponent {
   }
 
   protected onCreateLoan(): void {
-    if (this.loanForm.invalid) return;
+    if (this.loanForm.invalid) {
+      // If only startDate is missing, set default today date
+      if (this.loanForm.get('accountId')?.valid && this.loanForm.get('principalAmount')?.valid && this.loanForm.get('annualInterestRate')?.valid && this.loanForm.get('tenureMonths')?.valid) {
+        this.loanForm.patchValue({ startDate: new Date().toISOString().split('T')[0] });
+      } else {
+        return;
+      }
+    }
     this.isLoading.set(true);
 
     const raw = this.loanForm.getRawValue();
+    const startDateVal = raw.startDate || new Date().toISOString().split('T')[0];
     this.amortizationService.createLoan({
       accountId: raw.accountId!,
-      principalAmount: raw.principalAmount!,
-      annualInterestRate: raw.annualInterestRate!,
-      tenureMonths: raw.tenureMonths!,
-      startDate: raw.startDate!,
+      principalAmount: Number(raw.principalAmount),
+      annualInterestRate: Number(raw.annualInterestRate),
+      tenureMonths: Number(raw.tenureMonths),
+      startDate: startDateVal,
     }).subscribe({
-      next: (loan) => {
+      next: (res: any) => {
         this.isLoading.set(false);
-        this.activeLoan.set(loan);
-        this.notificationService.showSuccess('Loan Created', `Monthly EMI: ₹${Math.round(loan.monthlyEmi).toLocaleString('en-IN')}`);
+        const payload: LoanAmortizationDetails = res.data || res;
+        this.activeLoan.set(payload);
+        this.notificationService.showSuccess('Loan Created', `Monthly EMI: ₹${Math.round(payload.monthlyEmi).toLocaleString('en-IN')}`);
       },
       error: () => {
         this.isLoading.set(false);
@@ -516,20 +556,22 @@ export class AmortizationPageComponent {
     if (!loan || loan.schedule.length === 0) return;
     const firstRow = loan.schedule[0];
 
-    // Find accounts for EMI double-entry: Liability Loan Account, Asset Bank Account, Interest Expense Account
+    const accountId = loan.accountId || loan.loan?.accountId;
+    const loanId = loan.id || loan.loan?.id || 'loan';
+
     const assetAcc = this.ledgerStore.accounts().find((a) => a.type === 'ASSET');
     const interestExpenseAcc = this.ledgerStore.accounts().find((a) => a.type === 'EXPENSE');
 
-    if (!assetAcc || !interestExpenseAcc) {
-      this.notificationService.showError('Posting Failed', 'Need at least 1 ASSET account and 1 EXPENSE account in Chart of Accounts.');
+    if (!accountId || !assetAcc || !interestExpenseAcc) {
+      this.notificationService.showError('Posting Failed', 'Need at least 1 ASSET account, 1 EXPENSE account, and valid loan account.');
       return;
     }
 
     this.ledgerStore.postJournalEntry({
-      entryNumber: `EMI-${loan.id.slice(0, 6)}-M1`,
-      description: `Monthly EMI Payment - Loan #${loan.id.slice(0, 6)}`,
+      entryNumber: `EMI-${loanId.slice(0, 6)}-M1`,
+      description: `Monthly EMI Payment - Loan #${loanId.slice(0, 6)}`,
       postings: [
-        { accountId: loan.accountId, type: 'DEBIT', amount: firstRow.principalComponent },
+        { accountId, type: 'DEBIT', amount: firstRow.principalComponent },
         { accountId: interestExpenseAcc.id, type: 'DEBIT', amount: firstRow.interestComponent },
         { accountId: assetAcc.id, type: 'CREDIT', amount: firstRow.emi },
       ],

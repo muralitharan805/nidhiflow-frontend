@@ -6,6 +6,7 @@ import { CurrencyPipe } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -24,6 +25,7 @@ export type SimpleTransactionType = 'OPENING_BALANCE' | 'EXPENSE' | 'INCOME' | '
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatAutocompleteModule,
     MatButtonModule,
     MatIconModule,
     MatButtonToggleModule,
@@ -118,22 +120,52 @@ export type SimpleTransactionType = 'OPENING_BALANCE' | 'EXPENSE' | 'INCOME' | '
             <!-- Primary Account Selection (Bank/Cash) -->
             <mat-form-field appearance="outline" class="flex-1">
               <mat-label>{{ getPrimaryAccountLabel() }}</mat-label>
-              <mat-select formControlName="primaryAccountId">
-                @for (acc of assetAccounts(); track acc.id) {
+              <input
+                type="text"
+                matInput
+                placeholder="Type code or account name to search..."
+                [value]="displayPrimaryAccount(simpleForm.value.primaryAccountId, primarySearchText())"
+                (input)="onPrimaryInput($any($event.target).value)"
+                (focus)="primarySearchText.set('')"
+                [matAutocomplete]="primaryAuto"
+              />
+              <mat-autocomplete
+                #primaryAuto="matAutocomplete"
+                (optionSelected)="onPrimarySelect($event.option.value)"
+              >
+                @for (acc of filteredPrimaryAccounts(); track acc.id) {
                   <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
                 }
-              </mat-select>
+                @if (filteredPrimaryAccounts().length === 0) {
+                  <mat-option disabled>No matching accounts found</mat-option>
+                }
+              </mat-autocomplete>
               <mat-hint class="hint-text">💡 {{ getPrimaryAccountHint() }}</mat-hint>
             </mat-form-field>
 
             <!-- Secondary Account Selection (Equity/Expense/Income/Target Bank) -->
             <mat-form-field appearance="outline" class="flex-1">
               <mat-label>{{ getSecondaryAccountLabel() }}</mat-label>
-              <mat-select formControlName="secondaryAccountId">
-                @for (acc of getSecondaryAccountOptions(); track acc.id) {
+              <input
+                type="text"
+                matInput
+                placeholder="Type code or category name to search..."
+                [value]="displaySecondaryAccount(simpleForm.value.secondaryAccountId, secondarySearchText())"
+                (input)="onSecondaryInput($any($event.target).value)"
+                (focus)="secondarySearchText.set('')"
+                [matAutocomplete]="secondaryAuto"
+              />
+              <mat-autocomplete
+                #secondaryAuto="matAutocomplete"
+                (optionSelected)="onSecondarySelect($event.option.value)"
+              >
+                @for (acc of filteredSecondaryAccounts(); track acc.id) {
                   <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
                 }
-              </mat-select>
+                @if (filteredSecondaryAccounts().length === 0) {
+                  <mat-option disabled>No matching categories found</mat-option>
+                }
+              </mat-autocomplete>
               <mat-hint class="hint-text">💡 {{ getSecondaryAccountHint() }}</mat-hint>
             </mat-form-field>
           </div>
@@ -195,11 +227,26 @@ export type SimpleTransactionType = 'OPENING_BALANCE' | 'EXPENSE' | 'INCOME' | '
                 <div [formGroupName]="$index" class="posting-line">
                   <mat-form-field appearance="outline" class="account-select">
                     <mat-label>Account</mat-label>
-                    <mat-select formControlName="accountId">
-                      @for (acc of accounts(); track acc.id) {
+                    <input
+                      type="text"
+                      matInput
+                      placeholder="Type code or account name..."
+                      [value]="displayAdvancedAccount(line.value.accountId, advancedSearchText())"
+                      (input)="onAdvancedInput($any($event.target).value, $index)"
+                      (focus)="advancedSearchText.set('')"
+                      [matAutocomplete]="advAuto"
+                    />
+                    <mat-autocomplete
+                      #advAuto="matAutocomplete"
+                      (optionSelected)="onAdvancedSelect($event.option.value, $index)"
+                    >
+                      @for (acc of filteredAdvancedAccounts(); track acc.id) {
                         <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
                       }
-                    </mat-select>
+                      @if (filteredAdvancedAccounts().length === 0) {
+                        <mat-option disabled>No matching accounts found</mat-option>
+                      }
+                    </mat-autocomplete>
                   </mat-form-field>
 
                   <mat-form-field appearance="outline" class="type-select-field">
@@ -353,6 +400,39 @@ export type SimpleTransactionType = 'OPENING_BALANCE' | 'EXPENSE' | 'INCOME' | '
       height: 1.1rem;
     }
 
+    .select-search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      position: sticky;
+      top: 0;
+      background: var(--mat-sys-surface-container-high, #1e1e2d);
+      z-index: 10;
+      border-bottom: 1px solid var(--mat-sys-outline-variant, rgba(255, 255, 255, 0.12));
+
+      .search-icon {
+        font-size: 1.1rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      .search-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--mat-sys-on-surface);
+        font-size: 0.85rem;
+        padding: 0.25rem 0;
+
+        &::placeholder {
+          color: var(--mat-sys-outline);
+        }
+      }
+    }
+
     .posting-badges {
       display: flex;
       gap: 0.75rem;
@@ -456,9 +536,96 @@ export class JournalEntryFormComponent {
 
   // Account Categories Computed
   protected readonly assetAccounts = computed(() => this.accounts().filter((a) => a.type === 'ASSET'));
+  protected readonly liabilityAccounts = computed(() => this.accounts().filter((a) => a.type === 'LIABILITY'));
   protected readonly equityAccounts = computed(() => this.accounts().filter((a) => a.type === 'EQUITY'));
   protected readonly expenseAccounts = computed(() => this.accounts().filter((a) => a.type === 'EXPENSE'));
   protected readonly incomeAccounts = computed(() => this.accounts().filter((a) => a.type === 'INCOME'));
+
+  // Live Search Filters for Dropdowns
+  protected readonly primarySearchText = signal<string>('');
+  protected readonly secondarySearchText = signal<string>('');
+  protected readonly advancedSearchText = signal<string>('');
+
+  protected readonly filteredPrimaryAccounts = computed(() => {
+    const query = this.primarySearchText().toLowerCase().trim();
+    const options = this.getPrimaryAccountOptions();
+    if (!query) return options;
+    return options.filter((a) => a.code.toLowerCase().includes(query) || a.name.toLowerCase().includes(query));
+  });
+
+  protected readonly filteredSecondaryAccounts = computed(() => {
+    const query = this.secondarySearchText().toLowerCase().trim();
+    const options = this.getSecondaryAccountOptions();
+    if (!query) return options;
+    return options.filter((a) => a.code.toLowerCase().includes(query) || a.name.toLowerCase().includes(query));
+  });
+
+  protected readonly filteredAdvancedAccounts = computed(() => {
+    const query = this.advancedSearchText().toLowerCase().trim();
+    const options = this.accounts();
+    if (!query) return options;
+    return options.filter((a) => a.code.toLowerCase().includes(query) || a.name.toLowerCase().includes(query));
+  });
+
+  protected onPrimaryInput(val: string): void {
+    this.primarySearchText.set(val);
+    const matched = this.getPrimaryAccountOptions().find(
+      (a) => `${a.code} — ${a.name}`.toLowerCase() === val.toLowerCase() || a.id === val
+    );
+    this.simpleForm.patchValue({ primaryAccountId: matched ? matched.id : '' });
+  }
+
+  protected onPrimarySelect(accId: string): void {
+    this.simpleForm.patchValue({ primaryAccountId: accId });
+    this.primarySearchText.set('');
+  }
+
+  protected displayPrimaryAccount(accId: string | null | undefined, query: string): string {
+    if (query) return query;
+    if (!accId) return '';
+    const acc = this.accounts().find((a) => a.id === accId);
+    return acc ? `${acc.code} — ${acc.name}` : '';
+  }
+
+  protected onSecondaryInput(val: string): void {
+    this.secondarySearchText.set(val);
+    const matched = this.getSecondaryAccountOptions().find(
+      (a) => `${a.code} — ${a.name}`.toLowerCase() === val.toLowerCase() || a.id === val
+    );
+    this.simpleForm.patchValue({ secondaryAccountId: matched ? matched.id : '' });
+  }
+
+  protected onSecondarySelect(accId: string): void {
+    this.simpleForm.patchValue({ secondaryAccountId: accId });
+    this.secondarySearchText.set('');
+  }
+
+  protected displaySecondaryAccount(accId: string | null | undefined, query: string): string {
+    if (query) return query;
+    if (!accId) return '';
+    const acc = this.accounts().find((a) => a.id === accId);
+    return acc ? `${acc.code} — ${acc.name}` : '';
+  }
+
+  protected onAdvancedInput(val: string, index: number): void {
+    this.advancedSearchText.set(val);
+    const matched = this.accounts().find(
+      (a) => `${a.code} — ${a.name}`.toLowerCase() === val.toLowerCase() || a.id === val
+    );
+    this.linesArray.at(index).patchValue({ accountId: matched ? matched.id : '' });
+  }
+
+  protected onAdvancedSelect(accId: string, index: number): void {
+    this.linesArray.at(index).patchValue({ accountId: accId });
+    this.advancedSearchText.set('');
+  }
+
+  protected displayAdvancedAccount(accId: string | null | undefined, query: string): string {
+    if (query) return query;
+    if (!accId) return '';
+    const acc = this.accounts().find((a) => a.id === accId);
+    return acc ? `${acc.code} — ${acc.name}` : '';
+  }
 
   // Form 1: Simple Mode Form
   protected readonly simpleForm = this.fb.group({
@@ -581,6 +748,20 @@ export class JournalEntryFormComponent {
   }
 
   /**
+   * Returns filtered primary account selection options (source or deposit target).
+   *
+   * @returns Array of valid AccountEntity options
+   */
+  protected getPrimaryAccountOptions(): AccountEntity[] {
+    switch (this.simpleTxType()) {
+      case 'EXPENSE':
+        return this.accounts().filter((a) => a.type === 'ASSET' || a.type === 'LIABILITY');
+      default:
+        return this.assetAccounts();
+    }
+  }
+
+  /**
    * Returns filtered account selection options matching selected simple transaction category.
    *
    * @returns Array of valid AccountEntity options
@@ -591,7 +772,11 @@ export class JournalEntryFormComponent {
         const equity = this.equityAccounts();
         return equity.length ? equity : this.accounts().filter(a => a.type === 'EQUITY' || a.type === 'ASSET');
       }
-      case 'EXPENSE': return this.expenseAccounts().length ? this.expenseAccounts() : this.accounts();
+      case 'EXPENSE': {
+        const expenses = this.expenseAccounts();
+        const equity = this.equityAccounts();
+        return [...expenses, ...equity];
+      }
       case 'INCOME': return this.incomeAccounts().length ? this.incomeAccounts() : this.accounts();
       case 'TRANSFER': return this.assetAccounts();
     }

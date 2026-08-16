@@ -117,7 +117,11 @@ export class ReportsStoreService {
         const matched = backendItems?.find(
           (b) => b.code === acc.code || b.accountCode === acc.code || b.name === acc.name || b.accountId === acc.id
         );
-        const amount = rawBackend ? (matched ? Number(matched.amount ?? matched.balance ?? 0) : 0) : (acc.balance || 0);
+        const amount = rawBackend
+          ? matched
+            ? Number(matched.amount ?? matched.balance ?? 0)
+            : 0
+          : Math.abs(acc.balance || 0);
         return {
           code: acc.code,
           name: acc.name,
@@ -126,22 +130,47 @@ export class ReportsStoreService {
       });
     };
 
-    const assetItems = mapSectionItems('ASSET', rawBackend?.assets?.items);
-    const liabilityItems = mapSectionItems('LIABILITY', rawBackend?.liabilities?.items);
-    const equityItems = mapSectionItems('EQUITY', rawBackend?.equity?.items);
+    const rawAssetsList = Array.isArray(rawBackend?.assets)
+      ? rawBackend.assets
+      : rawBackend?.assets?.items;
+    const rawLiabilitiesList = Array.isArray(rawBackend?.liabilities)
+      ? rawBackend.liabilities
+      : rawBackend?.liabilities?.items;
+    const rawEquityList = Array.isArray(rawBackend?.equity)
+      ? rawBackend.equity
+      : rawBackend?.equity?.items;
+
+    const assetItems = mapSectionItems('ASSET', rawAssetsList);
+    const liabilityItems = mapSectionItems('LIABILITY', rawLiabilitiesList);
+    const equityItems = mapSectionItems('EQUITY', rawEquityList);
 
     if (incomeStmt.netIncome !== 0) {
       equityItems.push({
         code: '3020',
-        name: incomeStmt.netIncome >= 0 ? 'Retained Net Earnings (Current P&L Profit)' : 'Retained Net Deficit (Current P&L Loss)',
+        name:
+          incomeStmt.netIncome >= 0
+            ? 'Retained Net Earnings (Current P&L Profit)'
+            : 'Retained Net Deficit (Current P&L Loss)',
         amount: incomeStmt.netIncome,
       });
     }
 
-    const totalAssets = rawBackend?.totalAssets !== undefined ? Number(rawBackend.totalAssets) : assetItems.reduce((sum, i) => sum + i.amount, 0);
-    const totalLiabilities = liabilityItems.reduce((sum, i) => sum + i.amount, 0);
-    const totalEquity = equityItems.reduce((sum, i) => sum + i.amount, 0);
-    const totalLiabilitiesAndEquity = rawBackend?.totalLiabilitiesAndEquity !== undefined ? Number(rawBackend.totalLiabilitiesAndEquity) : totalLiabilities + totalEquity;
+    const totalAssets =
+      rawBackend?.totalAssets !== undefined
+        ? Number(rawBackend.totalAssets)
+        : assetItems.reduce((sum, i) => sum + i.amount, 0);
+    const totalLiabilities =
+      rawBackend?.totalLiabilities !== undefined
+        ? Number(rawBackend.totalLiabilities)
+        : liabilityItems.reduce((sum, i) => sum + i.amount, 0);
+    const totalEquity =
+      rawBackend?.totalEquity !== undefined
+        ? Number(rawBackend.totalEquity)
+        : equityItems.reduce((sum, i) => sum + i.amount, 0);
+    const totalLiabilitiesAndEquity =
+      rawBackend?.totalLiabilitiesAndEquity !== undefined
+        ? Number(rawBackend.totalLiabilitiesAndEquity)
+        : totalLiabilities + totalEquity;
 
     return {
       assets: { title: 'Assets', items: assetItems, total: totalAssets },
@@ -149,7 +178,10 @@ export class ReportsStoreService {
       equity: { title: 'Equity', items: equityItems, total: totalEquity },
       totalAssets,
       totalLiabilitiesAndEquity,
-      isBalanced: rawBackend?.isBalanced !== undefined ? Boolean(rawBackend.isBalanced) : Math.abs(totalAssets - totalLiabilitiesAndEquity) < 0.01,
+      isBalanced:
+        rawBackend?.isBalanced !== undefined
+          ? Boolean(rawBackend.isBalanced)
+          : Math.abs(totalAssets - totalLiabilitiesAndEquity) < 0.01,
     };
   });
 
@@ -166,7 +198,11 @@ export class ReportsStoreService {
         const matched = backendItems?.find(
           (b) => b.code === acc.code || b.accountCode === acc.code || b.name === acc.name || b.accountId === acc.id
         );
-        const amount = rawBackend ? (matched ? Number(matched.amount ?? matched.balance ?? 0) : 0) : (acc.balance || 0);
+        const amount = rawBackend
+          ? matched
+            ? Number(matched.amount ?? matched.balance ?? 0)
+            : 0
+          : Math.abs(acc.balance || 0);
         return {
           code: acc.code,
           name: acc.name,
@@ -175,12 +211,28 @@ export class ReportsStoreService {
       });
     };
 
-    const revenues = mapSectionItems('INCOME', rawBackend?.revenues);
-    const expenses = mapSectionItems('EXPENSE', rawBackend?.expenses);
+    const rawRevenuesList = Array.isArray(rawBackend?.revenues)
+      ? rawBackend.revenues
+      : rawBackend?.revenues?.items;
+    const rawExpensesList = Array.isArray(rawBackend?.expenses)
+      ? rawBackend.expenses
+      : rawBackend?.expenses?.items;
 
-    const totalRevenue = rawBackend?.totalRevenue !== undefined ? Number(rawBackend.totalRevenue) : revenues.reduce((sum, r) => sum + r.amount, 0);
-    const totalExpenses = rawBackend?.totalExpenses !== undefined ? Number(rawBackend.totalExpenses) : expenses.reduce((sum, e) => sum + e.amount, 0);
-    const netIncome = rawBackend?.netIncome !== undefined ? Number(rawBackend.netIncome) : totalRevenue - totalExpenses;
+    const revenues = mapSectionItems('INCOME', rawRevenuesList);
+    const expenses = mapSectionItems('EXPENSE', rawExpensesList);
+
+    const totalRevenue =
+      rawBackend?.totalRevenue !== undefined
+        ? Number(rawBackend.totalRevenue)
+        : revenues.reduce((sum, r) => sum + r.amount, 0);
+    const totalExpenses =
+      rawBackend?.totalExpenses !== undefined
+        ? Number(rawBackend.totalExpenses)
+        : expenses.reduce((sum, e) => sum + e.amount, 0);
+    const netIncome =
+      rawBackend?.netIncome !== undefined
+        ? Number(rawBackend.netIncome)
+        : totalRevenue - totalExpenses;
 
     return {
       revenues,
