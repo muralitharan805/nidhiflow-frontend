@@ -42,12 +42,14 @@ export class DashboardStoreService {
   public readonly recentActivity = this.recentActivitySignal.asReadonly();
 
   /**
-   * Computed signal deriving Net Worth ratio.
+   * Computed signal deriving formatted Net Worth ratio or Debt-Free indicator.
    */
-  public readonly assetToLiabilityRatio = computed(() => {
+  public readonly assetToLiabilityRatioText = computed(() => {
     const { totalAssets, totalLiabilities } = this.metricsSignal();
-    if (totalLiabilities === 0) return totalAssets;
-    return Number((totalAssets / totalLiabilities).toFixed(2));
+    if (totalLiabilities === 0) {
+      return totalAssets > 0 ? 'Debt-Free 🎯' : '0.00x';
+    }
+    return `${(totalAssets / totalLiabilities).toFixed(2)}x`;
   });
 
   /**
@@ -79,11 +81,19 @@ export class DashboardStoreService {
       .subscribe((entries) => {
         if (entries && entries.length > 0) {
           const activities: ActivityItem[] = entries.map((e) => {
-            const debitPosting = e.postings.find((p) => p.type === 'DEBIT' || p.accountType === 'EXPENSE' || p.accountType === 'INCOME');
-            const creditPosting = e.postings.find((p) => p.type === 'CREDIT' || p.accountType === 'ASSET' || p.accountType === 'LIABILITY');
-            
-            const categoryName = debitPosting?.accountName || (e.description.startsWith('[REVERSAL]') ? 'Reversal' : 'General Ledger');
-            const sourceAccName = creditPosting?.accountName || (e.postings.length > 1 ? e.postings[1].accountName : 'Cash / Bank');
+            const isStartingBalance = e.description.toLowerCase().includes('starting') || e.description.toLowerCase().includes('initial');
+            const debitPosting = e.postings.find((p) => p.type === 'DEBIT');
+            const creditPosting = e.postings.find((p) => p.type === 'CREDIT');
+
+            let categoryName = debitPosting?.accountName || 'General Ledger';
+            let sourceAccName = creditPosting?.accountName || 'Cash / Bank';
+            let itemType: 'DEBIT' | 'CREDIT' = 'DEBIT';
+
+            if (isStartingBalance) {
+              categoryName = 'Starting Capital';
+              sourceAccName = creditPosting?.accountName || 'Opening Balance Equity';
+              itemType = 'CREDIT';
+            }
 
             return {
               id: e.id,
@@ -91,7 +101,7 @@ export class DashboardStoreService {
               category: categoryName,
               sourceAccount: sourceAccName,
               amount: debitPosting ? debitPosting.amount : (e.postings[0]?.amount || 0),
-              type: 'DEBIT',
+              type: itemType,
               date: e.transactionDate || e.createdAt,
             };
           });

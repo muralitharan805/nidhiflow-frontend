@@ -89,9 +89,29 @@ export class QuickExpenseFormComponent {
     this.accounts().filter(a => a.type === 'EXPENSE')
   );
   
-  protected readonly paymentAccounts = computed(() => 
-    this.accounts().filter(a => a.type === 'ASSET' || a.type === 'LIABILITY')
-  );
+  protected readonly paymentAccounts = computed(() => {
+    const isLiquid = (name: string) => {
+      const lower = name.toLowerCase();
+      return lower.includes('bank') || lower.includes('savings') || lower.includes('cash') || 
+             lower.includes('wallet') || lower.includes('upi') || lower.includes('credit card') || lower.includes('salary');
+    };
+
+    // Filter Assets & Credit Cards, excluding long-term locked investments (EPF/PPF/NPS/Stocks)
+    const validPaymentSources = this.accounts().filter((a) => {
+      if (a.type === 'ASSET') {
+        const lower = a.name.toLowerCase();
+        const isLockedInvestment = lower.includes('provident') || lower.includes('nps') || lower.includes('stocks') || lower.includes('bonds');
+        return !isLockedInvestment;
+      }
+      return a.type === 'LIABILITY' && a.name.toLowerCase().includes('credit card');
+    });
+
+    return validPaymentSources.sort((a, b) => {
+      const aScore = isLiquid(a.name) ? 0 : 1;
+      const bScore = isLiquid(b.name) ? 0 : 1;
+      return aScore - bScore;
+    });
+  });
 
   protected readonly form = this.fb.group({
     amount: ['', [Validators.required, Validators.min(0.01)]],

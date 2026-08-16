@@ -43,49 +43,87 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
         <section class="panel">
           <h3 class="panel-title">🏠 Register New Loan</h3>
 
-          <form class="loan-form" [formGroup]="loanForm" (ngSubmit)="onCreateLoan()">
-            
-            <mat-form-field appearance="outline">
-              <mat-label>Liability Account</mat-label>
-              <mat-select formControlName="accountId">
-                @for (acc of liabilityAccounts(); track acc.id) {
-                  <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Principal Amount (₹)</mat-label>
-              <input matInput type="number" formControlName="principalAmount" placeholder="2500000" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Annual Interest Rate (%)</mat-label>
-              <input matInput type="number" formControlName="annualInterestRate" placeholder="8.5" step="0.1" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Tenure (Months)</mat-label>
-              <input matInput type="number" formControlName="tenureMonths" placeholder="240" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Loan Start Date</mat-label>
-              <input matInput type="date" formControlName="startDate" />
-            </mat-form-field>
-
-            <!-- Live EMI Preview -->
-            @if (previewEmi() > 0) {
-              <div class="emi-preview">
-                <span>Monthly EMI Preview:</span>
-                <strong>{{ previewEmi() | currency:'INR':'symbol':'1.0-0' }}</strong>
+          @if (liabilityAccounts().length === 0) {
+            <div class="empty-account-warning">
+              <div class="warning-header">
+                <span class="warning-icon">⚠️</span>
+                <strong>No Loan / Liability Account Found</strong>
               </div>
-            }
+              <p class="warning-text">
+                To register an EMI schedule, you need a <strong>Liability Account Head</strong> (e.g. Home Loan, Car Loan, Personal Loan) in your Chart of Accounts.
+              </p>
 
-            <button mat-flat-button color="primary" type="submit" [disabled]="loanForm.invalid || isLoading()">
-              {{ isLoading() ? 'Calculating...' : 'Generate Amortization Schedule' }}
-            </button>
-          </form>
+              @if (!showQuickAddForm()) {
+                <button mat-flat-button color="primary" type="button" (click)="showQuickAddForm.set(true)">
+                  + Quick Add Loan Account Head
+                </button>
+              } @else {
+                <div class="quick-add-box">
+                  <h4 class="quick-add-title">Create Loan Account Head</h4>
+                  <div class="quick-add-inputs">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>Account Name</mat-label>
+                      <input matInput [(ngModel)]="quickAccountName" placeholder="e.g. SBI Home Loan" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>Account Code</mat-label>
+                      <input matInput [(ngModel)]="quickAccountCode" placeholder="2010" />
+                    </mat-form-field>
+                  </div>
+                  <div class="quick-add-actions">
+                    <button mat-flat-button color="primary" type="button" [disabled]="!quickAccountName()" (click)="onQuickCreateLiabilityAccount()">
+                      Save & Select Account
+                    </button>
+                    <button mat-button type="button" (click)="showQuickAddForm.set(false)">Cancel</button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <form class="loan-form" [formGroup]="loanForm" (ngSubmit)="onCreateLoan()">
+              
+              <mat-form-field appearance="outline">
+                <mat-label>Liability Account</mat-label>
+                <mat-select formControlName="accountId">
+                  @for (acc of liabilityAccounts(); track acc.id) {
+                    <mat-option [value]="acc.id">{{ acc.code }} — {{ acc.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Principal Amount (₹)</mat-label>
+                <input matInput type="number" formControlName="principalAmount" placeholder="2500000" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Annual Interest Rate (%)</mat-label>
+                <input matInput type="number" formControlName="annualInterestRate" placeholder="8.5" step="0.1" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Tenure (Months)</mat-label>
+                <input matInput type="number" formControlName="tenureMonths" placeholder="240" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Loan Start Date</mat-label>
+                <input matInput type="date" formControlName="startDate" />
+              </mat-form-field>
+
+              <!-- Live EMI Preview -->
+              @if (previewEmi() > 0) {
+                <div class="emi-preview">
+                  <span>Monthly EMI Preview:</span>
+                  <strong>{{ previewEmi() | currency:'INR':'symbol':'1.0-0' }}</strong>
+                </div>
+              }
+
+              <button mat-flat-button color="primary" type="submit" [disabled]="loanForm.invalid || isLoading()">
+                {{ isLoading() ? 'Calculating...' : 'Generate Amortization Schedule' }}
+              </button>
+            </form>
+          }
         </section>
 
         <!-- EMI Countdown Card -->
@@ -251,6 +289,30 @@ import { LoanAmortizationDetails } from '../models/amortization.model';
 
     .loan-form { display: flex; flex-direction: column; gap: 0; }
 
+    .empty-account-warning {
+      background: var(--mat-sys-surface-container-low);
+      border: 1px dashed var(--mat-sys-outline);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .warning-header { display: flex; align-items: center; gap: 0.5rem; color: var(--mat-sys-error); }
+    .warning-text { font-size: 0.85rem; margin: 0; color: var(--mat-sys-on-surface-variant); }
+    
+    .quick-add-box {
+      background: var(--mat-sys-surface-container-lowest);
+      border: 1px solid var(--mat-sys-primary);
+      border-radius: 8px;
+      padding: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .quick-add-title { font-size: 0.875rem; font-weight: 700; margin: 0 0 0.75rem; }
+    .quick-add-inputs { display: flex; flex-direction: column; gap: 0.5rem; }
+    .quick-add-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .w-full { width: 100%; }
+
     .emi-preview {
       display: flex;
       justify-content: space-between;
@@ -405,6 +467,25 @@ export class AmortizationPageComponent {
     if (!extra || !loan || loan.monthlyEmi === 0) return 0;
     return Math.min(loan.tenureMonths, Math.round(extra / loan.monthlyEmi));
   });
+
+  protected readonly showQuickAddForm = signal<boolean>(false);
+  protected readonly quickAccountName = signal<string>('Home Loan Liability');
+  protected readonly quickAccountCode = signal<string>('2010');
+
+  protected onQuickCreateLiabilityAccount(): void {
+    const name = this.quickAccountName().trim();
+    const code = this.quickAccountCode().trim() || `20${Math.floor(Math.random() * 90 + 10)}`;
+    if (!name) return;
+
+    this.ledgerStore.createAccount({
+      code,
+      name,
+      type: 'LIABILITY',
+      description: 'EMI Loan Liability Account',
+    });
+
+    this.showQuickAddForm.set(false);
+  }
 
   protected onCreateLoan(): void {
     if (this.loanForm.invalid) return;
