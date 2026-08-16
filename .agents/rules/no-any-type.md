@@ -1,1 +1,0 @@
-/home/murali/Documents/projects/ai-agent-toolkit/shared/code-quality/rules/no-any-type.md
