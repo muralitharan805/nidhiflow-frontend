@@ -54,7 +54,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'login',
-        title: 'Login',
+        title: 'Personal Finance & Net Worth Tracker',
         loadComponent: () =>
           import('./features/auth/login-page.component').then((m) => m.LoginPageComponent),
       },

@@ -14,12 +14,22 @@ import { RouterOutlet } from '@angular/router';
         <header class="auth-header">
           <span class="auth-logo">💰</span>
           <h1 class="auth-title">nidhiFlow</h1>
-          <p class="auth-subtitle">Personal Finance & Ledger Engine</p>
+          <p class="auth-subtitle">Personal Finance, Double-Entry Accounting & Wealth Engine</p>
         </header>
 
         <section class="auth-body">
           <router-outlet />
         </section>
+
+        <footer class="auth-seo-footer">
+          <h2 class="seo-feature-title">Enterprise Finance Capabilities</h2>
+          <div class="seo-feature-badges">
+            <span class="badge">Double-Entry Accounting</span>
+            <span class="badge">EMI Amortization</span>
+            <span class="badge">Real-time Ledgers</span>
+            <span class="badge">Audit Trail</span>
+          </div>
+        </footer>
       </div>
     </main>
   `,
@@ -48,7 +58,7 @@ import { RouterOutlet } from '@angular/router';
 
     .auth-header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .auth-logo {
@@ -68,10 +78,44 @@ import { RouterOutlet } from '@angular/router';
       font-size: 0.875rem;
       color: #94a3b8;
       margin-top: 0.25rem;
+      line-height: 1.4;
     }
 
     .auth-body {
       width: 100%;
+    }
+
+    .auth-seo-footer {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      text-align: center;
+    }
+
+    .seo-feature-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .seo-feature-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .badge {
+      font-size: 0.725rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 500;
     }
   `]
 })
